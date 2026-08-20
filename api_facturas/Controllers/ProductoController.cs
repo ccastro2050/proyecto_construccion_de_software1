@@ -18,7 +18,7 @@
 //                                    lista de errores de la petición)
 //   ArgumentException         → 400 (regla de negocio)
 //   NoEncontradoExcepcion     → 404
-//   SqlException y demás      → 500 (mensaje del motor en detalle)
+//   NpgsqlException y demás      → 500 (mensaje del motor en detalle)
 // ============================================================
 
 using ApiFacturas.Excepciones;

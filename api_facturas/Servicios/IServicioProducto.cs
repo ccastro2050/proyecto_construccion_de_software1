@@ -6,7 +6,7 @@
 // excepciones de NEGOCIO que el controlador traduce a HTTP:
 //   ArgumentException        → 400
 //   NoEncontradoExcepcion    → 404
-//   SqlException y demás     → 500
+//   NpgsqlException y demás     → 500
 // ============================================================
 
 using ApiFacturas.Modelos;

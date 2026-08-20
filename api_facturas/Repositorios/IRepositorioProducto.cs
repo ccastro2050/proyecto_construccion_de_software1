@@ -4,7 +4,7 @@
 // Una interface de C# define QUÉ operaciones existen sobre
 // producto, sin decir CÓMO ni CONTRA QUÉ motor. Cualquier clase
 // que declare ": IRepositorioProducto" puede ocupar este lugar:
-// el SQL Server real de la v1, el falso en memoria de las
+// el PostgreSQL real de la v1, el falso en memoria de las
 // pruebas, o el PostgreSQL que llegará en la v3 (polimorfismo).
 //
 // El servicio depende de ESTA interfaz, nunca de una clase

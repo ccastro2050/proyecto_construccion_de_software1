@@ -44,25 +44,25 @@ contenido de cada uno en el mismo orden):
 | # | Archivo | Papel |
 |---|---|---|
 | 1 | `docs/spec_kit/1_constitution.md` | Las reglas permanentes (C#, capas, un comando) |
-| 2 | `docs/spec_kit/versiones/v1_producto_sqlserver/2_spec.md` | QUÉ construir y los criterios de aceptación |
-| 3 | `.../v1_producto_sqlserver/3_plan.md` | CÓMO: stack, carpetas, capas |
-| 4 | `.../v1_producto_sqlserver/4_research.md` | Decisiones y alternativas (el porqué del plan) |
-| 5 | `.../v1_producto_sqlserver/5_data_model.md` | La BD completa (dada) y la tabla producto |
-| 6 | `.../v1_producto_sqlserver/6_contracts.md` | Los 7 endpoints exactos |
-| 7 | `.../v1_producto_sqlserver/7_quickstart.md` | El smoke test de validación |
-| 8 | `.../v1_producto_sqlserver/8_tasks.md` | Las fases, en orden |
+| 2 | `docs/spec_kit/versiones/v1_producto_postgres/2_spec.md` | QUÉ construir y los criterios de aceptación |
+| 3 | `.../v1_producto_postgres/3_plan.md` | CÓMO: stack, carpetas, capas |
+| 4 | `.../v1_producto_postgres/4_research.md` | Decisiones y alternativas (el porqué del plan) |
+| 5 | `.../v1_producto_postgres/5_data_model.md` | La BD completa (dada) y la tabla producto |
+| 6 | `.../v1_producto_postgres/6_contracts.md` | Los 7 endpoints exactos |
+| 7 | `.../v1_producto_postgres/7_quickstart.md` | El smoke test de validación |
+| 8 | `.../v1_producto_postgres/8_tasks.md` | Las fases, en orden |
 
 Además de los 8 documentos, la versión trae **dos artefactos que NO se
-suben al chat ni los genera la IA**: `db/bdfacturas.sql` (el script
-completo de la BD en dialecto SQL Server) y `db/init.sh` (el
-inicializador) — usted los **copia tal cual** del repositorio a su
+suben al chat ni los genera la IA**: `db/bdfacturas_postgres.sql` (el script
+completo de la BD en dialecto PostgreSQL — PostgreSQL lo ejecuta
+solo, la primera vez).
 proyecto (ver A.2, paso 5).
 
 > **¿Qué es un "artefacto"?** En ingeniería de software, cualquier archivo
 > que el proceso produce o entrega. Aquí lo usamos para distinguir: los
 > **documentos** se LEEN (la IA construye a partir de ellos); los
 > **artefactos** de `db/` se USAN tal cual — son insumo dado, como la
-> imagen de SQL Server. Analogía: los documentos son el plano de la casa;
+> imagen de PostgreSQL. Analogía: los documentos son el plano de la casa;
 > los artefactos son prefabricados que llegan listos a la obra.
 
 **No suba nada más.** El mapa de versiones no hace falta (y le revelaría a
@@ -81,17 +81,17 @@ en un **proyecto propio, en una carpeta nueva y vacía**:
    integrada (*Terminal → New Terminal*, PowerShell), parado en su carpeta:
 
    ```powershell
-   mkdir docs\spec_kit\versiones\v1_producto_sqlserver, db, api_facturas\Modelos, api_facturas\Peticiones, api_facturas\Controllers, api_facturas\Servicios, api_facturas\Repositorios, api_facturas\Excepciones, api_facturas\pruebas
+   mkdir docs\spec_kit\versiones\v1_producto_postgres, db, api_facturas\Modelos, api_facturas\Peticiones, api_facturas\Controllers, api_facturas\Servicios, api_facturas\Repositorios, api_facturas\Excepciones, api_facturas\pruebas
    ```
 
 4. **Cree los ARCHIVOS VACÍOS** — **USTED los irá llenando** uno a uno,
    pegando en cada archivo el código que la IA le entregue:
 
    ```powershell
-   New-Item .gitignore, docker-compose.yml, api_facturas\ApiFacturas.csproj, api_facturas\Program.cs, api_facturas\appsettings.json, api_facturas\Dockerfile, api_facturas\Modelos\Producto.cs, api_facturas\Peticiones\ProductoCrear.cs, api_facturas\Peticiones\ProductoReemplazo.cs, api_facturas\Peticiones\ProductoActualizar.cs, api_facturas\Controllers\ProductoController.cs, api_facturas\Servicios\IServicioProducto.cs, api_facturas\Servicios\ServicioProducto.cs, api_facturas\Repositorios\IRepositorioProducto.cs, api_facturas\Repositorios\RepositorioProductoSqlServer.cs, api_facturas\Excepciones\NoEncontradoExcepcion.cs, api_facturas\pruebas\PruebaCapas.csproj, api_facturas\pruebas\Programa.cs
+   New-Item .gitignore, docker-compose.yml, api_facturas\ApiFacturas.csproj, api_facturas\Program.cs, api_facturas\appsettings.json, api_facturas\Dockerfile, api_facturas\Modelos\Producto.cs, api_facturas\Peticiones\ProductoCrear.cs, api_facturas\Peticiones\ProductoReemplazo.cs, api_facturas\Peticiones\ProductoActualizar.cs, api_facturas\Controllers\ProductoController.cs, api_facturas\Servicios\IServicioProducto.cs, api_facturas\Servicios\ServicioProducto.cs, api_facturas\Repositorios\IRepositorioProducto.cs, api_facturas\Repositorios\RepositorioProductoPostgres.cs, api_facturas\Excepciones\NoEncontradoExcepcion.cs, api_facturas\pruebas\PruebaCapas.csproj, api_facturas\pruebas\Programa.cs
    ```
 
-   (`db/bdfacturas.sql` y `db/init.sh` NO están en la lista a propósito:
+   (`db/bdfacturas_postgres.sql` NO está en la lista a propósito:
    esos no nacen vacíos — se copian del repositorio en el paso 5.)
 
 5. **Copie y pegue los 10 archivos que vienen dados** (con el explorador
@@ -100,17 +100,17 @@ en un **proyecto propio, en una carpeta nueva y vacía**:
 
    | Del clon del curso | A su proyecto |
    |---|---|
-   | `db\bdfacturas.sql` y `db\init.sh` | `db\` |
+   | `db\bdfacturas_postgres.sql` | `db\` |
    | `docs\spec_kit\1_constitution.md` | `docs\spec_kit\` |
-   | Los 7 `.md` de `docs\spec_kit\versiones\v1_producto_sqlserver\` | `docs\spec_kit\versiones\v1_producto_sqlserver\` |
+   | Los 7 `.md` de `docs\spec_kit\versiones\v1_producto_postgres\` | `docs\spec_kit\versiones\v1_producto_postgres\` |
 
    (Estos 10 vienen dados — la IA no los genera: las specs se le SUBEN al
    chat, y los scripts de `db/` son la BD completa ya escrita.)
 
 **Antes de abrir el chat, verifique:** `docs\spec_kit\1_constitution.md`
-debe existir, `docs\spec_kit\versiones\v1_producto_sqlserver\` debe tener
-**7 archivos** (2_spec a 8_tasks), y `db\` debe tener `bdfacturas.sql`
-(con contenido, ~1.470 líneas) e `init.sh`. Si algo está vacío, falta el
+debe existir, `docs\spec_kit\versiones\v1_producto_postgres\` debe tener
+**7 archivos** (2_spec a 8_tasks), y `db\` debe tener `bdfacturas_postgres.sql`
+(con contenido, ~1.060 líneas). Si algo está vacío, falta el
 paso 5.
 
 La estructura queda lista ANTES de hablar con la IA (es la de `3_plan.md`
@@ -123,12 +123,11 @@ mi_v1_producto/                   ← SU carpeta
 │   └── spec_kit/                 ← las especificaciones, IGUAL que en el repo
 │       ├── 1_constitution.md
 │       └── versiones/
-│           └── v1_producto_sqlserver/  ← los 7 documentos de la v1
+│           └── v1_producto_postgres/  ← los 7 documentos de la v1
 ├── .gitignore                    ← Fase 6 (excluye bin/, obj/, *.session.sql)
-├── docker-compose.yml            ← Fase 0 (sqlserver + init) y Fase 6 (api-facturas)
+├── docker-compose.yml            ← Fase 0 (postgres) y Fase 6 (api-facturas)
 ├── db/
-│   ├── bdfacturas.sql            ← Fase 0: COPIADO del repo (no lo genera la IA)
-│   └── init.sh                   ← Fase 0: COPIADO del repo
+│   ├── bdfacturas_postgres.sql            ← Fase 0: COPIADO del repo (no lo genera la IA)
 └── api_facturas/                 ← TODO el código va aquí adentro
     ├── ApiFacturas.csproj        ← Fase 1
     ├── appsettings.json          ← Fase 1
@@ -147,7 +146,7 @@ mi_v1_producto/                   ← SU carpeta
     │   └── ServicioProducto.cs        ← Fase 4
     ├── Repositorios/
     │   ├── IRepositorioProducto.cs    ← Fase 3
-    │   └── RepositorioProductoSqlServer.cs  ← Fase 3
+    │   └── RepositorioProductoPostgres.cs  ← Fase 3
     ├── Excepciones/
     │   └── NoEncontradoExcepcion.cs   ← Fase 2
     └── pruebas/
@@ -166,7 +165,7 @@ final").
 | La IA le entrega | Usted lo pone en |
 |---|---|
 | Un bloque de código con su ruta (ej.: "Archivo: `api_facturas/Modelos/Producto.cs`") | Ese archivo, que ya existe vacío en ESA ruta |
-| (La BD no la entrega la IA) | `db/bdfacturas.sql` e `init.sh` se **copian del repositorio** tal cual — si la IA intenta escribirle un `CREATE TABLE`, recuérdele que la BD ya viene dada |
+| (La BD no la entrega la IA) | `db/bdfacturas_postgres.sql` se **copia del repositorio** tal cual — si la IA intenta escribirle un `CREATE TABLE`, recuérdele que la BD ya viene dada |
 | Comandos (docker compose, dotnet build, curl) | La terminal integrada del IDE, parado en la carpeta correcta (ver abajo) |
 
 Si un bloque llega **sin ruta**, no adivine: pregúntele "¿en qué archivo va
@@ -212,7 +211,7 @@ proyecto universitario, partiendo de cero. Te adjunto 8 documentos: una
 constitución (reglas permanentes) y el spec kit de la versión 1 (spec, plan,
 research con las decisiones, modelo de datos, contratos, quickstart y tareas).
 
-El proyecto es C# sobre ASP.NET Core (.NET 10) + SQL Server — así lo fija
+El proyecto es C# sobre ASP.NET Core (.NET 10) + PostgreSQL — así lo fija
 3_plan.md. Si en tu respuesta aparece OTRO lenguaje o framework (Python,
 Java, Node, PHP…), significa que no leíste los documentos adjuntos: detente
 y dímelo en vez de continuar.
@@ -220,7 +219,7 @@ y dímelo en vez de continuar.
 REGLAS DE TRABAJO (no negociables):
 
 1. La especificación manda. No agregues NADA que los documentos no pidan:
-   ni paquetes NuGet extra (solo Microsoft.Data.SqlClient y
+   ni paquetes NuGet extra (solo Npgsql y
    Swashbuckle.AspNetCore), ni Entity
    Framework, ni Swagger, ni tablas extra, ni motores extra, ni fábricas
    "por si acaso", ni mejoras de tu cosecha. Si crees que falta algo,
@@ -252,21 +251,21 @@ REGLAS DE TRABAJO (no negociables):
    (.NET 10).
 6. Yo trabajo en Windows con un IDE (VS Code, usando su terminal integrada
    de PowerShell) y Docker Desktop. Dame los comandos para ese entorno.
-7. La base de datos YA VIENE DADA en db/bdfacturas.sql + db/init.sh — se
+7. La base de datos YA VIENE DADA en db/bdfacturas_postgres.sql — se
    montan tal cual en el compose; no escribas ni modifiques SQL de
    creación de tablas.
 8. En mi máquina TAMBIÉN corre el proyecto clonado del curso con sus
    puertos originales. Para que ambos convivan, MI proyecto:
    a. Publica los puertos del host con +100: en el docker-compose.yml la
-      API va "8132:8032" y SQL Server va "11563:1433" (adentro de los
+      API va "8142:8042" y PostgreSQL va "15542:1433" (adentro de los
       contenedores todo queda igual que en los documentos).
    b. El docker-compose.yml empieza con la línea `name: mi_v1_producto`
       (antes de services:) — así Docker lo trata como un proyecto
       distinto al del curso, con sus propios contenedores y volúmenes,
       aunque las carpetas se llamen parecido.
    La cadena de conexión por defecto de appsettings.json (para correr sin
-   Docker) apunta a localhost,11563. Cuando me des URLs o comandos de
-   prueba, usa localhost:8132 (API) y localhost,11563 (BD).
+   Docker) apunta a localhost,15542. Cuando me des URLs o comandos de
+   prueba, usa localhost:8142 (API) y localhost,15542 (BD).
 
 Al final, la versión 1 está TERMINADA solo cuando pasan los 6 criterios de
 aceptación de 2_spec.md, verificados con el smoke test de 7_quickstart.md.
@@ -290,15 +289,15 @@ que entendiste el alcance) y luego arranca con la Fase 0.
    en el chat CADA error tal cual salga (completo). La IA le entrega el
    archivo corregido, usted lo pega y repite hasta que los 6 criterios
    estén en verde. **Ojo con los puertos**: SU proyecto corre con +100
-   (regla 8 del prompt) — donde el quickstart diga `localhost:8032` use
-   `localhost:8132`, y donde diga `11463` use `11563`.
+   (regla 8 del prompt) — donde el quickstart diga `localhost:8042` use
+   `localhost:8142`, y donde diga `15442` use `15542`.
 4. **Si la IA se acelera** y entrega varios archivos de un tirón,
    recuérdele la regla 2b: "de a uno, espera mi listo".
 5. **Si la primera respuesta llega en OTRO lenguaje** (Python, Java, Node,
    PHP…), no corrija sobre eso: es la señal inequívoca de que la IA **no
    leyó los adjuntos**. Cierre ese chat, verifique que los 8 documentos
    realmente cargaron (deslice el carrusel de adjuntos) y que son los de
-   ESTE proyecto (3_plan.md debe decir C#/ASP.NET Core + SQL Server), y
+   ESTE proyecto (3_plan.md debe decir C#/ASP.NET Core + PostgreSQL), y
    empiece de nuevo con el prompt tal cual.
 6. **Si el chat pierde el contexto** (conversaciones largas): abra un chat
    nuevo, vuelva a subir los 8 documentos y agregue al prompt: "Ya tengo
@@ -321,12 +320,12 @@ es la referencia). El agente construye en SU proyecto:
 1. Cree una carpeta nueva y vacía para su proyecto (ej.: `mi_v1_producto/`)
    y copie dentro: los 8 documentos de la tabla A.1 en `docs\spec_kit\`
    replicando la estructura por versiones (`docs\spec_kit\1_constitution.md`
-   + `docs\spec_kit\versiones\v1_producto_sqlserver\` con los 7 de la
-   versión), y los scripts `db\bdfacturas.sql` + `db\init.sh` del
+   + `docs\spec_kit\versiones\v1_producto_postgres\` con los 7 de la
+   versión), y el script `db\bdfacturas_postgres.sql` del
    repositorio (la BD viene dada — el agente no debe generarla).
 2. Abra SU carpeta en el IDE (en Antigravity: *Open Folder*; el agente verá
    `docs/spec_kit/` — no hay que subirle nada).
-3. Tenga Docker Desktop corriendo (el agente necesitará levantar SQL Server).
+3. Tenga Docker Desktop corriendo (el agente necesitará levantar PostgreSQL).
 4. Active el modo agente (en Antigravity, el *Agent Manager*; en otros IDE,
    el chat en modo "agent").
 
@@ -336,19 +335,19 @@ es la referencia). El agente construye en SU proyecto:
 Construye la VERSIÓN 1 de este proyecto, partiendo de cero.
 
 Primero lee, en este orden, los 8 documentos que están bajo docs/spec_kit/
-(1_constitution.md en la raíz; los demás en versiones/v1_producto_sqlserver/):
+(1_constitution.md en la raíz; los demás en versiones/v1_producto_postgres/):
 1_constitution, 2_spec, 3_plan, 4_research, 5_data_model, 6_contracts,
 7_quickstart y 8_tasks. Después resume en máximo 10 líneas qué vas a
 construir y espera mi confirmación antes de tocar nada. El código va en la
 raíz de este proyecto según la estructura de 3_plan.md (docs/spec_kit/ es
 solo lectura: no la modifiques). La base de datos YA VIENE DADA en
-db/bdfacturas.sql + db/init.sh — úsalos tal cual para montar SQL Server;
+db/bdfacturas_postgres.sql — úsalo tal cual para montar PostgreSQL;
 no escribas ni modifiques SQL de creación de tablas.
 
 REGLAS (no negociables):
 
 1. La especificación manda. No agregues NADA que los documentos no pidan:
-   ni paquetes NuGet extra (solo Microsoft.Data.SqlClient y
+   ni paquetes NuGet extra (solo Npgsql y
    Swashbuckle.AspNetCore), ni Entity
    Framework, ni Swagger, ni tablas extra, ni motores extra, ni fábricas
    "por si acaso". Si crees que falta algo, pregúntame antes.
@@ -362,10 +361,10 @@ REGLAS (no negociables):
 4. Todo en español, C# sobre ASP.NET Core (.NET 10), con los comentarios
    didácticos que exige la constitución.
 5. En esta máquina TAMBIÉN corre el proyecto clonado del curso. MI proyecto
-   publica los puertos del host con +100 (API "8132:8032", SQL Server
-   "11563:1433") y su docker-compose.yml empieza con `name: mi_v1_producto`.
+   publica los puertos del host con +100 (API "8142:8042", PostgreSQL
+   "15542:1433") y su docker-compose.yml empieza con `name: mi_v1_producto`.
 6. Al final, corre el smoke test completo de 7_quickstart.md §2 (con mis
-   puertos: localhost:8132) y muéstrame la evidencia de los 6 criterios de
+   puertos: localhost:8142) y muéstrame la evidencia de los 6 criterios de
    aceptación de 2_spec.md. La versión no está terminada hasta que los 6
    estén en verde.
 ```

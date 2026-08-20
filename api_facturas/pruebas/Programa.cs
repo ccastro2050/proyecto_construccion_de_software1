@@ -3,7 +3,7 @@
 //
 // Verifica que ServicioProducto funciona con un repositorio
 // FALSO en memoria que implementa IRepositorioProducto — sin
-// SQL Server corriendo.
+// PostgreSQL corriendo.
 //
 // Si esto pasa, las capas quedaron bien cortadas (polimorfismo +
 // inversión de dependencias): el servicio depende de la INTERFAZ,
@@ -46,7 +46,7 @@ catch (ArgumentException) { /* esperado */ }
 try { await servicio.ListarAsync(0); Verificar(false, "debió lanzar ArgumentException"); }
 catch (ArgumentException) { /* esperado */ }
 
-Console.WriteLine("CRITERIO 6 OK: el servicio funciona con el repositorio falso, sin SQL Server");
+Console.WriteLine("CRITERIO 6 OK: el servicio funciona con el repositorio falso, sin PostgreSQL");
 
 // Mini-verificador (función local): si la condición es falsa, reporta
 // y sale con error (terminar con 0 = pasó; con 1 = falló).

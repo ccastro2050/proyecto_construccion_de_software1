@@ -1,4 +1,4 @@
-# Plan técnico — Versión 1: producto + SQL Server (C#/ASP.NET Core)
+# Plan técnico — Versión 1: producto + PostgreSQL (C#/ASP.NET Core)
 
 > **Versión 1** · CÓMO construir lo especificado en [2_spec.md](2_spec.md).
 > El porqué de cada decisión: [4_research.md](4_research.md) · contratos
@@ -11,24 +11,23 @@
 | Pieza | Elección | Por qué |
 |---|---|---|
 | Lenguaje / framework | **C# sobre ASP.NET Core (.NET 10)** | El stack del curso; controladores con atributos, DI integrada, async nativo |
-| Acceso a datos | **ADO.NET** (`Microsoft.Data.SqlClient`) con SQL parametrizado | SQL visible — sin ORM que lo esconda (constitución, Art. 2) |
+| Acceso a datos | **ADO.NET** (`Npgsql`) con SQL parametrizado | SQL visible — sin ORM que lo esconda (constitución, Art. 2) |
 | Validación | **Una petición por verbo** con anotaciones (`[Required]`, `[Range]`…) | El framework valida el body contra la petición y responde 422 — la petición ES la frontera |
-| Motor (v1) | **SQL Server 2022** (contenedor oficial) | El motor natural del ecosistema .NET; los otros llegan en v3/v4 |
+| Motor (v1) | **PostgreSQL 2022** (contenedor oficial) | El motor natural del ecosistema .NET; los otros llegan en v3/v4 |
 | Contenedor de la API | `mcr.microsoft.com/dotnet/sdk:10.0` + `dotnet watch` | Guardar un `.cs` recompila y reinicia solo (ciclo de desarrollo del curso) |
 
 ## 2. Estructura de carpetas
 
 ```
 (raíz del proyecto)
-├── docker-compose.yml                # UN comando: sqlserver + init + api (crece por versiones)
+├── docker-compose.yml                # UN comando: postgres + api (crece por versiones)
 ├── db/
-│   ├── bdfacturas.sql                # la BD completa, PROVISTA (se copia, no se genera)
-│   └── init.sh                       # el inicializador (SQL Server no auto-ejecuta scripts)
+│   └── bdfacturas_postgres.sql       # la BD completa, PROVISTA (se copia, no se genera)
 └── api_facturas/
-    ├── ApiFacturas.csproj            # el proyecto .NET (paquetes: SqlClient y Swashbuckle)
+    ├── ApiFacturas.csproj            # el proyecto .NET (paquetes: Npgsql y Swashbuckle)
     ├── Program.cs                    # punto de entrada: ENSAMBLADOR (DI) + 422 + rutas
-    ├── appsettings.json              # cadena de conexión (default localhost:11463)
-    ├── Dockerfile                    # sdk:10.0 + dotnet watch (puerto 8032)
+    ├── appsettings.json              # cadena de conexión (default localhost:15442)
+    ├── Dockerfile                    # sdk:10.0 + dotnet watch (puerto 8042)
     ├── Modelos/
     │   └── Producto.cs               # el MODELO = la ENTIDAD: 4 propiedades tipadas
     ├── Peticiones/
@@ -42,7 +41,7 @@
     │   └── ServicioProducto.cs       # reglas de negocio; recibe IRepositorioProducto
     ├── Repositorios/
     │   ├── IRepositorioProducto.cs   # interface: 5 métodos de datos (async)
-    │   └── RepositorioProductoSqlServer.cs   # ADO.NET + SQL parametrizado
+    │   └── RepositorioProductoPostgres.cs   # ADO.NET + SQL parametrizado
     ├── Excepciones/
     │   └── NoEncontradoExcepcion.cs  # la excepción de negocio que el controller vuelve 404
     └── pruebas/
@@ -58,8 +57,8 @@ HTTP → ASP.NET routing        (los atributos [HttpGet]/[HttpPost]… deciden e
      → ProductoController     (try/catch: traduce excepciones a códigos HTTP)
      → IServicioProducto      (interfaz — reglas de negocio)
      → IRepositorioProducto   (interfaz — el servicio no sabe qué motor hay detrás)
-     → RepositorioProductoSqlServer (ADO.NET + parámetros @)
-     → SQL Server
+     → RepositorioProductoPostgres (ADO.NET + parámetros @)
+     → PostgreSQL
 ```
 
 **Regla de dependencias:** controller → servicio → interfaz de repositorio.
@@ -103,7 +102,7 @@ sino de regla de negocio.)
 ### 4.3 El ensamblador: la sección de DI de Program.cs
 ```csharp
 builder.Services.AddScoped<IRepositorioProducto>(
-    _ => new RepositorioProductoSqlServer(cadenaConexion));
+    _ => new RepositorioProductoPostgres(cadenaConexion));
 builder.Services.AddScoped<IServicioProducto, ServicioProducto>();
 ```
 Sin fábrica multi-motor ni selección: v1 tiene UN motor y el código lo dice.
@@ -113,18 +112,18 @@ v3).
 
 ### 4.4 SQL del repositorio (ADO.NET, siempre parametrizado)
 ```sql
-SELECT TOP (@limite) codigo, nombre, stock, valorunitario FROM producto ORDER BY codigo
+SELECT LIMIT @limite codigo, nombre, stock, valorunitario FROM producto ORDER BY codigo
 SELECT … WHERE codigo = @codigo
 INSERT INTO producto (codigo, nombre, stock, valorunitario) VALUES (@codigo, @nombre, @stock, @valorunitario)
 UPDATE producto SET … WHERE codigo = @codigo_clave   -- los campos que lleguen (PUT: los 3; PATCH: los enviados)
 DELETE FROM producto WHERE codigo = @codigo
 ```
-- `TOP (@limite)` es el "LIMIT" del dialecto SQL Server (y acepta parámetro).
+- `LIMIT @limite` es el "LIMIT" del dialecto PostgreSQL (y acepta parámetro).
 - Conexión por operación con `await using` (se cierra sola, incluso con
   error); todo `async`.
 - El SET del UPDATE se arma solo con columnas que salen de las PETICIONES
   (lista blanca), nunca con claves del cliente.
-- Detalle amable del motor: en SQL Server, las filas afectadas de un UPDATE
+- Detalle amable del motor: en PostgreSQL, las filas afectadas de un UPDATE
   cuentan las que CUMPLIERON el WHERE (aunque el valor nuevo sea igual al
   viejo) — un PATCH con el mismo valor reporta 1 fila, sin trucos.
 
@@ -134,24 +133,25 @@ DELETE FROM producto WHERE codigo = @codigo
 | (Body con errores de forma — lo responde el framework con la lista) | 422 |
 | `ArgumentException` (regla de negocio: límite ≤ 0, body vacío en PATCH) | 400 |
 | `NoEncontradoExcepcion` (código inexistente) | 404 |
-| `SqlException` y cualquier otra | 500 (mensaje del motor en `detalle`) |
+| `NpgsqlException` y cualquier otra | 500 (mensaje del motor en `detalle`) |
 
 Cada método del controller lleva su propio `try/catch` plano, de arriba a
 abajo — sin indirecciones.
 
-### 4.6 SQL Server necesita un INICIALIZADOR
-A diferencia de otros motores, SQL Server no ejecuta automáticamente los
-scripts que se le monten. Por eso el compose trae un segundo contenedor
-(`sqlserver-init`) que espera a que el motor esté sano, corre `db/init.sh`
-(crea la BD si no existe y ejecuta `bdfacturas.sql`) y termina. La API
-arranca con `depends_on: condition: service_completed_successfully` — solo
-cuando la BD ya existe con sus datos.
+### 4.6 PostgreSQL se siembra SOLO (sin inicializador)
+PostgreSQL ejecuta automáticamente los scripts montados en
+`/docker-entrypoint-initdb.d/` la PRIMERA vez (cuando su volumen está
+vacío): el compose monta `db/bdfacturas_postgres.sql` ahí y no necesita
+ningún contenedor extra. La API arranca con `depends_on: condition:
+service_healthy` — cuando la BD ya RESPONDE (y por tanto ya se sembró).
+(Otros motores, como SQL Server, NO tienen este mecanismo y exigen un
+contenedor inicializador: esa lección llegará con el segundo motor.)
 
 ## 5. Docker: un solo comando desde v1
 
 La constitución (Artículo 4) manda: `docker compose up -d --build` deja TODO
-funcionando. En v1 eso son **tres servicios**: `sqlserver` (11463 al host),
-`sqlserver-init` (corre una vez) y `api-facturas` (8032, código montado +
+funcionando. En v1 eso son **dos servicios**: `postgres` (15442 al host,
+se siembra solo) y `api-facturas` (8042, código montado +
 `dotnet watch`, `bin/` y `obj/` en volúmenes anónimos para no mezclar
 compilados de Linux con los de Windows). El detalle línea por línea está en
 el `docker-compose.yml` de la raíz, comentado.

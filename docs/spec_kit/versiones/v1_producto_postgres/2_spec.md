@@ -1,4 +1,4 @@
-# Especificación — Versión 1 del proyecto: api_facturas con producto + SQL Server
+# Especificación — Versión 1 del proyecto: api_facturas con producto + PostgreSQL
 
 > **Versión 1** del desarrollo incremental ([mapa de versiones](../0_mapa_versiones.md)).
 > Rige la constitución del proyecto: [../../1_constitution.md](../../1_constitution.md).
@@ -23,7 +23,7 @@
 
 Construir la **primera rebanada vertical (corte vertical)** de la API de
 facturación en **C# / ASP.NET Core**: el CRUD completo de **una sola
-entidad (`producto`)** contra **un solo motor (SQL Server)** — pero con la
+entidad (`producto`)** contra **un solo motor (PostgreSQL)** — pero con la
 **arquitectura en capas completa desde el primer día**: controlador →
 servicio → repositorio, comunicados por **interfaces de C#**.
 
@@ -50,7 +50,7 @@ servicio → repositorio, comunicados por **interfaces de C#**.
 La v1 es pequeña a propósito: su valor no está en la funcionalidad sino en
 dejar el **esqueleto arquitectónico correcto** sobre el que las versiones
 siguientes agregan tablas (v2), motores (v3, v4), la API genérica (v5) y el
-frontend Blazor (v6) **sin reescribir lo construido**.
+frontend Flask (Jinja2) (v6) **sin reescribir lo construido**.
 
 ## 2. Alcance
 
@@ -66,11 +66,11 @@ frontend Blazor (v6) **sin reescribir lo construido**.
   el body contra ellas → **422 con lista de errores** antes de tocar el
   controlador.
 - Capas con interfaces: `IRepositorioProducto` implementada por
-  `RepositorioProductoSqlServer` (ADO.NET); el servicio depende de la
+  `RepositorioProductoPostgres` (ADO.NET); el servicio depende de la
   interfaz.
 - Configuración por `appsettings.json`, sobrescribible por variables de
-  entorno (`ConnectionStrings__SqlServer`) — la vía natural en Docker.
-- **Un solo comando** (Artículo 4): `docker-compose.yml` con SQL Server +
+  entorno (`ConnectionStrings__Postgres`) — la vía natural en Docker.
+- **Un solo comando** (Artículo 4): `docker-compose.yml` con PostgreSQL +
   su inicializador + la API, de modo que `docker compose up -d --build`
   deja todo funcionando.
 - Endpoint `/` de diagnóstico y **documentación interactiva Swagger** en
@@ -78,7 +78,7 @@ frontend Blazor (v6) **sin reescribir lo construido**.
   navegador.
 
 **No incluye (y es deliberado — ver [mapa de versiones](../0_mapa_versiones.md)):**
-- **Ningún frontend** (Blazor llega en v6) y **ninguna API genérica** (v5).
+- **Ningún frontend** (Flask (Jinja2) llega en v6) y **ninguna API genérica** (v5).
 - Endpoints para otras entidades (v2) — las otras 11 tablas EXISTEN en la
   BD, pero el código de la v1 solo puede nombrar `producto`.
 - Otros motores y la fábrica de repositorios (v3, v4).
@@ -130,21 +130,21 @@ inexistente → 404.
   conoce HTTP ni el motor; el repositorio no conoce HTTP. Contratos con
   `interface` de C#.
 - **RNF2 — Sin ORM:** ADO.NET con el SQL visible; único paquete:
-  `Microsoft.Data.SqlClient` (Artículo 2).
+  `Npgsql` (Artículo 2).
 - **RNF3 — SQL SIEMPRE parametrizado** (`@parametro`); nada de concatenar
   valores.
 - **RNF4 — Asíncrona:** todo el acceso a datos con `async/await`.
 - **RNF5 — Errores uniformes:** `{estado, mensaje, detalle}` (y
   `errores:[…]` en el 422); ArgumentException→400 ·
-  NoEncontradoExcepcion→404 · SqlException y demás→500.
+  NoEncontradoExcepcion→404 · NpgsqlException y demás→500.
 - **RNF6 — Sin anticipación:** ni fábrica multi-motor ni selección de motor
   en v1 (los introduce la v3 cuando exista el segundo motor).
 
 ## 5. Criterios de aceptación
 
 1. **`docker compose up -d --build` — un solo comando —** deja corriendo
-   SQL Server (inicializado con el script provisto: 12 tablas), y la API;
-   `GET http://localhost:8032/` responde el JSON de diagnóstico. Guardar un
+   PostgreSQL (inicializado con el script provisto: 12 tablas), y la API;
+   `GET http://localhost:8042/` responde el JSON de diagnóstico. Guardar un
    `.cs` recompila y reinicia solo (dotnet watch).
 2. `GET /api/producto` devuelve los 8 productos de ejemplo con
    `{tabla:"producto", total:8, datos:[…]}`, y `GET /api/producto?limite=3`
@@ -162,4 +162,4 @@ inexistente → 404.
    duplicado → 500 con el error del motor en `detalle`.
 6. **Prueba de capas:** `dotnet run --project pruebas` (o vía
    `docker compose exec`) ejecuta el servicio con un repositorio FALSO en
-   memoria — sin SQL Server — y todas las verificaciones pasan.
+   memoria — sin PostgreSQL — y todas las verificaciones pasan.

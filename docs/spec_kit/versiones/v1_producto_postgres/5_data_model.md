@@ -8,9 +8,10 @@
 
 ## 1. La base de datos `bdfacturas` (dada, completa)
 
-El script **provisto** `db/bdfacturas.sql` (dialecto SQL Server) crea la
-base `bdfacturas_sqlserver_local` completa. El contenedor `sqlserver-init`
-lo ejecuta automáticamente la PRIMERA vez (cuando la BD no existe).
+El script **provisto** `db/bdfacturas_postgres.sql` (dialecto PostgreSQL) crea la
+base `bdfacturas_postgres_local` completa. PostgreSQL lo ejecuta SOLO la
+PRIMERA vez (está montado en `/docker-entrypoint-initdb.d/` y corre
+cuando el volumen de datos nace vacío).
 
 **12 tablas** en dos módulos:
 
@@ -29,11 +30,11 @@ almacenados** de consulta — todos esperando a las versiones siguientes.
 
 **Datos de ejemplo:** 8 productos (PR001…PR008), 6 personas, 6 facturas con
 detalle, usuarios y roles. Credenciales de BD (didácticas): `sa` /
-`Paradigmas123!`.
+`Construccion123!`.
 
 ## 2. Lo ÚNICO que la v1 puede nombrar: la tabla `producto`
 
-| Columna | Tipo (SQL Server) | Regla |
+| Columna | Tipo (PostgreSQL) | Regla |
 |---|---|---|
 | `codigo` | `VARCHAR(10)` | **PK** — texto de 1 a 10 caracteres |
 | `nombre` | `VARCHAR(100)` | No nulo, no vacío |

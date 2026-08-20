@@ -2,7 +2,7 @@
 // ServicioProducto — la capa de NEGOCIO de la v1.
 //
 // Recibe POR CONSTRUCTOR la interfaz del repositorio (inversión
-// de dependencias): no sabe si detrás hay SQL Server o un falso
+// de dependencias): no sabe si detrás hay PostgreSQL o un falso
 // en memoria para pruebas — y así debe ser.
 //
 // No conoce HTTP: comunica los problemas con excepciones de
@@ -83,7 +83,7 @@ public class ServicioProducto : IServicioProducto
     {
         // El body ya pasó por la petición ProductoCrear (tipos y rangos):
         // aquí solo se delega. Si la BD rechaza (código duplicado →
-        // viola la PK), la SqlException sube tal cual y el controlador
+        // viola la PK), la NpgsqlException sube tal cual y el controlador
         // la convierte en 500.
         await _repositorio.CrearAsync(producto);
     }

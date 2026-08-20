@@ -33,7 +33,7 @@ public class Producto
 }
 ```
 
-Y en las capas: `RepositorioProductoSqlServer` guarda su cadena de conexión
+Y en las capas: `RepositorioProductoPostgres` guarda su cadena de conexión
 como `private readonly` — nadie más en el sistema sabe que existe.
 
 ### Herencia
@@ -45,7 +45,7 @@ lo que permite el `catch` selectivo (404 vs 500).
 ### Polimorfismo
 **El requisito central del proyecto**: piezas intercambiables tras una
 interfaz. `ServicioProducto` funciona igual con
-`RepositorioProductoSqlServer` (el real) que con `RepositorioFalsoEnMemoria`
+`RepositorioProductoPostgres` (el real) que con `RepositorioFalsoEnMemoria`
 (el de la prueba de capas) — porque ambos firman `: IRepositorioProducto`.
 Cuando la v3 agregue PostgreSQL, será OTRA clase con la misma interfaz.
 
@@ -117,7 +117,7 @@ petición puede volver a fusionarse con el modelo en una sola clase.
    polimorfismo — repositorios intercambiables tras una interfaz.
 3. **Probabilidad de prueba:** el criterio de aceptación 6 de la v1 (probar
    el servicio con un repositorio falso en memoria) solo es posible porque
-   el servicio depende de una abstracción, no de SQL Server.
+   el servicio depende de una abstracción, no de PostgreSQL.
 4. **Puente a SOLID:** los principios SOLID
    ([SOLID_CAPAS_PATRONES.md](SOLID_CAPAS_PATRONES.md)) son reglas de diseño **dentro**
    del paradigma orientado a objetos — sin P.O.O. no hay SOLID que aplicar.
@@ -130,7 +130,7 @@ ProductoCrear / Reemplazo / Actualizar ← las PETICIONES: reglas por verbo (la 
 ProductoController               ← objeto HTTP; compone un IServicioProducto
 ServicioProducto                 ← objeto de NEGOCIO; compone un IRepositorioProducto
 IRepositorioProducto             ← contrato (interface): abstracción pura
-RepositorioProductoSqlServer     ← implementación concreta (encapsula ADO.NET y SQL)
+RepositorioProductoPostgres     ← implementación concreta (encapsula ADO.NET y SQL)
 RepositorioFalsoEnMemoria        ← otra implementación (¡polimorfismo!) para probar sin BD
 NoEncontradoExcepcion            ← herencia: una Exception con nombre propio
 ```

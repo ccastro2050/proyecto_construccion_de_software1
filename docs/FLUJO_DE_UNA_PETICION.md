@@ -64,9 +64,9 @@ solo que aquí la hace el framework y usted la declara con el atributo.
       └─ ¿limpio? → entra a Crear(body)
 4. ProductoController  construye la entidad Producto y llama al servicio
 5. ServicioProducto    delega al repositorio (por la interfaz)
-6. RepositorioProductoSqlServer
+6. RepositorioProductoPostgres
                        INSERT INTO producto (...) VALUES (@codigo, ...)  ← parametrizado
-7. SQL Server          inserta la fila (y aplica SUS reglas: PK, NOT NULL…)
+7. PostgreSQL          inserta la fila (y aplica SUS reglas: PK, NOT NULL…)
 8. La respuesta sube:  el controller responde 200 {estado, mensaje}
 ```
 
@@ -78,7 +78,7 @@ método del controller, que la traduce a un código HTTP:
 | El body venía mal formado | (no es excepción: la validación de la petición) | **422** |
 | Regla de negocio rota (límite ≤ 0, PATCH sin campos) | `ArgumentException` | **400** |
 | El código no existe en la tabla | `NoEncontradoExcepcion` | **404** |
-| La BD rechazó (código duplicado, conexión caída…) | `SqlException` u otra | **500** |
+| La BD rechazó (código duplicado, conexión caída…) | `NpgsqlException` u otra | **500** |
 
 ## 4. El viaje de un GET (más corto: no hay body ni validación de forma)
 
@@ -101,20 +101,20 @@ En la terminal de VS Code (PowerShell), con el proyecto corriendo:
 
 ```powershell
 # GET (el navegador también sirve para estos dos)
-Invoke-RestMethod "http://localhost:8032/api/producto"
-Invoke-RestMethod "http://localhost:8032/api/producto/PR001"
+Invoke-RestMethod "http://localhost:8042/api/producto"
+Invoke-RestMethod "http://localhost:8042/api/producto/PR001"
 
 # POST — crear
-Invoke-RestMethod -Method Post -Uri "http://localhost:8032/api/producto" -ContentType "application/json" -Body '{"codigo":"PR009","nombre":"Webcam","stock":10,"valorunitario":350000}'
+Invoke-RestMethod -Method Post -Uri "http://localhost:8042/api/producto" -ContentType "application/json" -Body '{"codigo":"PR009","nombre":"Webcam","stock":10,"valorunitario":350000}'
 
 # PUT con body incompleto → error 422 (PUT exige TODO)
-Invoke-RestMethod -Method Put -Uri "http://localhost:8032/api/producto/PR009" -ContentType "application/json" -Body '{"stock":25}'
+Invoke-RestMethod -Method Put -Uri "http://localhost:8042/api/producto/PR009" -ContentType "application/json" -Body '{"stock":25}'
 
 # PATCH con el MISMO body → 200 (PATCH es parcial)
-Invoke-RestMethod -Method Patch -Uri "http://localhost:8032/api/producto/PR009" -ContentType "application/json" -Body '{"stock":25}'
+Invoke-RestMethod -Method Patch -Uri "http://localhost:8042/api/producto/PR009" -ContentType "application/json" -Body '{"stock":25}'
 
 # DELETE — limpiar
-Invoke-RestMethod -Method Delete -Uri "http://localhost:8032/api/producto/PR009"
+Invoke-RestMethod -Method Delete -Uri "http://localhost:8042/api/producto/PR009"
 ```
 
 La pareja PUT/PATCH con el mismo body es la lección más importante del

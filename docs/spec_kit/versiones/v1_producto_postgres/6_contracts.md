@@ -1,6 +1,6 @@
 # Contratos HTTP — Versión 1: los 7 endpoints con formatos exactos
 
-> **Versión 1** · Base: `http://localhost:8032`. Estos contratos se cumplen
+> **Versión 1** · Base: `http://localhost:8042`. Estos contratos se cumplen
 > **al pie de la letra** (constitución, Artículo 7): mismos verbos, rutas,
 > códigos y formatos.
 
@@ -22,7 +22,7 @@
 ## 1. `GET /` — Diagnóstico
 
 ```
-→ 200 {"mensaje":"API Facturas funcionando","version":"v1","contratos":"docs/spec_kit/versiones/v1_producto_sqlserver/6_contracts.md"}
+→ 200 {"mensaje":"API Facturas funcionando","version":"v1","contratos":"docs/spec_kit/versiones/v1_producto_postgres/6_contracts.md"}
 ```
 
 Además: `GET /swagger` abre la **documentación interactiva** (Swagger UI) —

@@ -1,4 +1,4 @@
-# Proyecto Aplicación y Servicios Web — construcción por versiones
+# Proyecto Construcción de Software — construcción por versiones
 
 Proyecto de curso (ITM). Aquí NO se descarga un sistema terminado:
 **se construye un sistema real por versiones en C# / ASP.NET Core**, guiado
@@ -15,7 +15,7 @@ curso, funcionando** — usted la ejecuta, la estudia y luego la
 | Herramienta | Para qué |
 |---|---|
 | **Git** | Clonar el repositorio y traer versiones nuevas |
-| **Docker Desktop** | La BD y la API corren en contenedores (no se instala SQL Server ni .NET) |
+| **Docker Desktop** | La BD y la API corren en contenedores (no se instala PostgreSQL ni .NET) |
 | **VS Code** | El editor — y su terminal integrada (*Terminal → New Terminal*) |
 
 > El SDK de .NET local es **opcional** (solo para desarrollar fase a fase
@@ -26,32 +26,33 @@ curso, funcionando** — usted la ejecuta, la estudia y luego la
 En la terminal integrada de VS Code (*Terminal → New Terminal*, PowerShell):
 
 ```powershell
-git clone https://github.com/ccastro2050/proyecto_aplicacion_y_servicios_web1.git
-cd proyecto_aplicacion_y_servicios_web1
+git clone https://github.com/ccastro2050/proyecto_construccion_de_software1.git
+cd proyecto_construccion_de_software1
 docker compose up -d --build
 ```
 
-**Eso es todo.** La primera vez tarda varios minutos (descarga imágenes,
-el inicializador crea la BD, y la primera compilación de la API toma
-~1 minuto más). Al terminar quedan corriendo la base de datos (bdfacturas
-completa en SQL Server) y la API:
+**Eso es todo.** La primera vez tarda unos minutos (descarga imágenes,
+PostgreSQL se siembra solo con el script montado, y la primera
+compilación de la API toma ~1 minuto más). Al terminar quedan corriendo la base de datos (bdfacturas
+completa en PostgreSQL) y la API:
 
 | Qué | Dónde |
 |---|---|
-| **API Facturas** — diagnóstico | http://localhost:8032/ |
-| **Swagger** (documentación interactiva: ver y probar los endpoints) | http://localhost:8032/swagger |
-| Listar productos | http://localhost:8032/api/producto |
-| SQL Server (para SQLTools/SSMS, opcional) | `localhost,11463` · `sa`/`Paradigmas123!` |
+| **API Facturas** — diagnóstico | http://localhost:8042/ |
+| **Swagger** (documentación interactiva: ver y probar los endpoints) | http://localhost:8042/swagger |
+| Listar productos | http://localhost:8042/api/producto |
+| PostgreSQL (para SQLTools/pgAdmin, opcional) | `localhost:15442` · `postgres`/`Construccion123!` |
 
 Pruebe la joya didáctica de la v1: PUT con solo `{"stock": 99}` → 422; el
 mismo body en PATCH → 200. Esa diferencia es parte de lo que enseña la
 versión (contratos exactos en el spec kit).
 
-> ℹ️ Este proyecto usa los puertos 8032 y 11463: si alguno ya está ocupado
+> ℹ️ Este proyecto usa los puertos 8042 y 15442: si alguno ya está ocupado
 > en su máquina, cámbielo en `docker-compose.yml` (el lado izquierdo del
 > `"puerto:puerto"`).
 >
-> ⚠️ SQL Server necesita ~2 GB de RAM libres en Docker Desktop.
+> ℹ️ PostgreSQL es liviano (imagen de ~50 MB): no hay requisitos
+> especiales de RAM.
 
 ### Los días siguientes (volver a encender)
 
@@ -76,7 +77,7 @@ es **reconstruirla usted mismo, en una carpeta propia (fuera del clon)**,
 siguiendo las especificaciones — con o sin ayuda de IA:
 
 > 🤖 ¿Va a trabajar con IA? Siga la **[Guía para construir la versión con
-> IA](docs/spec_kit/versiones/v1_producto_sqlserver/GUIA_IA1.md)** — cubre los dos caminos con su prompt exacto listo
+> IA](docs/spec_kit/versiones/v1_producto_postgres/GUIA_IA1.md)** — cubre los dos caminos con su prompt exacto listo
 > para copiar: **chat web** (Gemini, DeepSeek, ChatGPT: qué archivos
 > subirle) e **IDE agéntico** (Antigravity, Cursor, Claude Code: cómo
 > supervisar al agente).
@@ -102,32 +103,28 @@ siguiendo las especificaciones — con o sin ayuda de IA:
 Qué es cada carpeta y cada archivo, y para qué sirve:
 
 ```
-proyecto_aplicacion_y_servicios_web1/
-├── docker-compose.yml           # TODO el sistema declarado: SQL Server + inicializador
-│                                #   + API (el "un solo comando" del proyecto)
+proyecto_construccion_de_software1/
+├── docker-compose.yml           # TODO el sistema declarado: PostgreSQL + API
+│                                #   (el "un solo comando" del proyecto)
 ├── db/
-│   ├── bdfacturas.sql           # Crea bdfacturas COMPLETA (12 tablas, triggers, SPs,
-│   │                            #   datos) — dialecto SQL Server
-│   └── init.sh                  # El inicializador: SQL Server no auto-ejecuta scripts;
-│                                #   este contenedor los corre UNA vez y termina
-│
-├── backupdb/                    # Respaldos (.bak) de la BD — su README explica
-│                                #   cómo hacer el backup y cómo restaurarlo
+│   └── bdfacturas_postgres.sql  # Crea bdfacturas COMPLETA (12 tablas, triggers,
+│                                #   SPs, datos) — PostgreSQL lo ejecuta SOLO la
+│                                #   primera vez (docker-entrypoint-initdb.d)
 │
 ├── postman/                     # La colección de Postman lista para importar:
 │                                #   los 13 endpoints en orden didáctico (alternativa a Swagger)
 │
-├── api_facturas/                # LA API DE LA v1 — C#/ASP.NET Core (puerto 8032)
-│   ├── ApiFacturas.csproj       # El proyecto .NET (paquetes: SqlClient y Swashbuckle)
+├── api_facturas/                # LA API DE LA v1 — C#/ASP.NET Core (puerto 8042)
+│   ├── ApiFacturas.csproj       # El proyecto .NET (paquetes: Npgsql y Swashbuckle)
 │   ├── Program.cs               # Punto de entrada: ENSAMBLADOR (DI) + 422 + rutas
-│   ├── appsettings.json         # Cadena de conexión (default localhost,11463)
+│   ├── appsettings.json         # Cadena de conexión (default localhost:15442)
 │   ├── Dockerfile               # Imagen sdk:10.0 + dotnet watch
 │   ├── Controllers/             # Capa 1 — HTTP: atributos de verbo y try/catch → códigos
 │   ├── Modelos/                 # Los MODELOS = las clases ENTIDAD (v1: Producto)
 │   ├── Peticiones/              # Los body por verbo (Crear/Reemplazo/Actualizar):
 │   │                            #   sus anotaciones validan la entrada → 422
 │   ├── Servicios/               # Capa 2 — negocio: interfaz + reglas
-│   ├── Repositorios/            # Capa 3 — datos: interfaz + ADO.NET/SQL Server
+│   ├── Repositorios/            # Capa 3 — datos: interfaz + ADO.NET/PostgreSQL
 │   ├── Excepciones/             # NoEncontradoExcepcion (el servicio la lanza → 404)
 │   └── pruebas/                 # Proyecto de consola: el servicio con repositorio
 │                                #   FALSO en memoria (criterio 6, corre sin BD)
@@ -137,7 +134,6 @@ proyecto_aplicacion_y_servicios_web1/
 │   │                            #   + la GUIA_IA de ESA versión (GUIA_IA1, GUIA_IA2…) (cómo
 │   │                            #   construirla con ayuda de una IA)
 │   ├── FLUJO_DE_UNA_PETICION.md # Dónde "está" el GET, dónde se captura el POST
-│   ├── TUTORIAL_SSMS.md         # Administrar la BD con SQL Server Management Studio
 │   ├── TUTORIAL_VSCODE_SQLTOOLS.md # Administrar la BD desde VS Code (SQLTools)
 │   ├── PARADIGMA_POO.md         # Material conceptual: POO, SOLID+capas, ACID,
 │   ├── SOLID_CAPAS_PATRONES.md         #   Docker y SDD (un .md por tema)
@@ -157,13 +153,13 @@ más carpetas de componentes (y el compose crecerá con ellas).
 ## 3. La ruta de versiones
 
 ```
-v1  api_facturas (C#/ASP.NET Core): CRUD de producto, solo SQL Server   ← USTED ESTÁ AQUÍ
+v1  api_facturas (C#/ASP.NET Core): CRUD de producto, solo PostgreSQL   ← USTED ESTÁ AQUÍ
 v2  más tablas (persona, factura maestro-detalle…)
 v3  segundo motor (PostgreSQL) — nace la fábrica de repositorios
 v4  tercer motor (MariaDB) + compose completo
 v5  API GENÉRICA de plataforma: /api/{tabla} multi-motor + JWT +
     consultas parametrizadas + procedimientos almacenados
-v6  frontend BLAZOR: CRUD de las 12 entidades + login + facturación
+v6  frontend FLASK (Jinja2): CRUD de las 12 entidades + login + facturación
 ```
 
 La regla del juego: la **constitución** es permanente, cada versión tiene
@@ -176,13 +172,13 @@ de aceptación (commit + tag). Mapa completo:
 | Documento | Contenido |
 |---|---|
 | [1_constitution.md](docs/spec_kit/1_constitution.md) | Las reglas permanentes del proyecto |
-| [2_spec.md](docs/spec_kit/versiones/v1_producto_sqlserver/2_spec.md) | QUÉ construir y los criterios de aceptación |
-| [3_plan.md](docs/spec_kit/versiones/v1_producto_sqlserver/3_plan.md) | CÓMO: stack, estructura y diseño de las capas |
-| [4_research.md](docs/spec_kit/versiones/v1_producto_sqlserver/4_research.md) | Decisiones y alternativas (el porqué) |
-| [5_data_model.md](docs/spec_kit/versiones/v1_producto_sqlserver/5_data_model.md) | La BD completa (dada) y la tabla producto |
-| [6_contracts.md](docs/spec_kit/versiones/v1_producto_sqlserver/6_contracts.md) | Los 7 endpoints con formatos exactos |
-| [7_quickstart.md](docs/spec_kit/versiones/v1_producto_sqlserver/7_quickstart.md) | Arranque y smoke test |
-| [8_tasks.md](docs/spec_kit/versiones/v1_producto_sqlserver/8_tasks.md) | Orden de construcción por fases verificables |
+| [2_spec.md](docs/spec_kit/versiones/v1_producto_postgres/2_spec.md) | QUÉ construir y los criterios de aceptación |
+| [3_plan.md](docs/spec_kit/versiones/v1_producto_postgres/3_plan.md) | CÓMO: stack, estructura y diseño de las capas |
+| [4_research.md](docs/spec_kit/versiones/v1_producto_postgres/4_research.md) | Decisiones y alternativas (el porqué) |
+| [5_data_model.md](docs/spec_kit/versiones/v1_producto_postgres/5_data_model.md) | La BD completa (dada) y la tabla producto |
+| [6_contracts.md](docs/spec_kit/versiones/v1_producto_postgres/6_contracts.md) | Los 7 endpoints con formatos exactos |
+| [7_quickstart.md](docs/spec_kit/versiones/v1_producto_postgres/7_quickstart.md) | Arranque y smoke test |
+| [8_tasks.md](docs/spec_kit/versiones/v1_producto_postgres/8_tasks.md) | Orden de construcción por fases verificables |
 
 ## 5. Material conceptual del curso
 
@@ -198,5 +194,5 @@ de aceptación (commit + tag). Mapa completo:
 
 ---
 
-*Proyecto Aplicación y Servicios Web · ITM · Base de datos bdfacturas
+*Proyecto Construcción de Software · ITM · Base de datos bdfacturas
 (facturación + RBAC).*

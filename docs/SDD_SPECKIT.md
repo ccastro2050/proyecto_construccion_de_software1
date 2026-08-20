@@ -18,7 +18,7 @@ código es su implementación.
 
 La era de la IA lo volvió urgente: una IA puede escribir el código, pero
 solo escribe EL CORRECTO si alguien le da una especificación precisa. En
-este curso usted lo vive: la [GUIA_IA.md de la versión](spec_kit/versiones/v1_producto_sqlserver/GUIA_IA1.md) construye la versión
+este curso usted lo vive: la [GUIA_IA.md de la versión](spec_kit/versiones/v1_producto_postgres/GUIA_IA1.md) construye la versión
 entregándole a una IA el spec kit — y nada más.
 
 ## 2. El spec kit de este proyecto (8 documentos numerados)
@@ -37,7 +37,7 @@ entregándole a una IA el spec kit — y nada más.
 - **La constitución es una y permanente**; los documentos 2 a 8 se escriben
   POR VERSIÓN, en `versiones/vN_nombre/`.
 - **La versión en curso:**
-  [spec_kit/versiones/v1_producto_sqlserver/](spec_kit/versiones/v1_producto_sqlserver/2_spec.md)
+  [spec_kit/versiones/v1_producto_postgres/](spec_kit/versiones/v1_producto_postgres/2_spec.md)
   — la spec de la v1 ES el documento que se le entrega a la IA (o al
   estudiante) para construirla.
 
@@ -78,4 +78,4 @@ solo entonces se escribe la spec de la siguiente versión.
 2. Especificación por el ejemplo: Adzic, G. — *Specification by Example*
    (Manning, 2011).
 3. En este repositorio: el [spec kit completo](spec_kit/1_constitution.md)
-   y la [GUIA_IA.md de la versión](spec_kit/versiones/v1_producto_sqlserver/GUIA_IA1.md) que lo pone a prueba.
+   y la [GUIA_IA.md de la versión](spec_kit/versiones/v1_producto_postgres/GUIA_IA1.md) que lo pone a prueba.

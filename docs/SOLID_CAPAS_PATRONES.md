@@ -41,14 +41,14 @@ contrato. Así se ve el **viaje de UNA petición** por dentro de la API — el
                  ▼
 ┌─────────────────────────────────────────────────────┐
 │ CAPA 3 — REPOSITORIO (datos)                        │
-│ Repositorios/RepositorioProductoSqlServer.cs        │
+│ Repositorios/RepositorioProductoPostgres.cs        │
 │ El SQL con ADO.NET: traduce filas ↔ objetos         │
 │ Producto. NO conoce HTTP. NO decide negocio.        │
 └────────────────┬────────────────────────────────────┘
                  │  ④ SELECT … FROM producto WHERE codigo = @codigo
                  ▼
           ┌───────────────┐
-          │ BASE DE DATOS │  SQL Server — bdfacturas
+          │ BASE DE DATOS │  PostgreSQL — bdfacturas
           └───────┬───────┘
                   │
    y la respuesta hace el viaje DE VUELTA:
@@ -62,12 +62,12 @@ Qué hace — y qué tiene PROHIBIDO — cada capa:
 |---|---|---|---|
 | **Controller** | HTTP: rutas, códigos de estado, JSON | SQL y reglas de negocio | `Controllers/ProductoController.cs` |
 | **Servicio** | Las reglas del negocio (¿existe? ¿se puede?) | Saber de HTTP o del motor de BD | `Servicios/ServicioProducto.cs` |
-| **Repositorio** | El SQL y el mapeo fila ↔ objeto | Saber de HTTP o decidir negocio | `Repositorios/RepositorioProductoSqlServer.cs` |
+| **Repositorio** | El SQL y el mapeo fila ↔ objeto | Saber de HTTP o decidir negocio | `Repositorios/RepositorioProductoPostgres.cs` |
 
 **La regla:** las dependencias apuntan en una sola dirección y cruzan por
 **interfaces**. El controller conoce al servicio; el servicio conoce la
 interfaz del repositorio; **nadie** conoce dos capas hacia abajo (el
-controller no sabe que existe SQL Server).
+controller no sabe que existe PostgreSQL).
 
 **El mismo viaje cuando algo sale mal** — `GET /api/producto/PR999`:
 
@@ -100,7 +100,7 @@ de forma del body. Ninguna clase hace dos de esas cosas.
 [HttpGet("{codigo}")]
 public async Task<IActionResult> Obtener(string codigo)
 {
-    await using var conexion = new SqlConnection(...);   // SQL aquí = mezcla
+    await using var conexion = new NpgsqlConnection(...);   // SQL aquí = mezcla
     // ...y el if de "¿existe?" aquí = negocio mezclado
 }
 
@@ -113,14 +113,14 @@ public async Task<IActionResult> Obtener(string codigo)
 
 ### O — Abierto/Cerrado (Open/Closed)
 Abierto a extensión, cerrado a modificación. **El examen llega con el
-segundo motor (la v4 del mapa del curso)**: agregar PostgreSQL debe ser
-AGREGAR clases (`RepositorioProductoPostgres : IRepositorioProducto`) y
+segundo motor (la v4 del mapa del curso)**: agregar SQL Server debe ser
+AGREGAR clases (`RepositorioProductoSqlServer : IRepositorioProducto`) y
 tocar SOLO el ensamblador — sin modificar controller, servicio ni la
 interfaz.
 
 ```csharp
 // La v4 AGREGA sin modificar: una clase nueva con la misma interfaz...
-public class RepositorioProductoPostgres : IRepositorioProducto { /* … */ }
+public class RepositorioProductoSqlServer : IRepositorioProducto { /* … */ }
 
 // ...y el ensamblador (Program.cs, ÚNICO archivo tocado) elige el motor
 // en UN solo punto — la fábrica de repositorios (ver §3, patrones):
@@ -135,7 +135,7 @@ IFabricaRepositorios fabrica = motor switch
 ### L — Sustitución de Liskov
 Cualquier implementación de la interfaz puede ocupar el lugar de otra sin
 romper nada. Ya pasa en la v1: `RepositorioFalsoEnMemoria` sustituye a
-`RepositorioProductoSqlServer` en las pruebas y el servicio ni se entera.
+`RepositorioProductoPostgres` en las pruebas y el servicio ni se entera.
 
 ```csharp
 // El repositorio FALSO de las pruebas (criterio 6): sin BD, misma interfaz
@@ -181,7 +181,7 @@ public ServicioProducto(IRepositorioProducto repositorio)  // ← interfaz, no c
 
 Solo el **ensamblador** (la sección de DI en `Program.cs`) conoce las
 clases concretas. Eso es literalmente "invertir" la dependencia: el detalle
-(SQL Server) depende del contrato, no al revés.
+(PostgreSQL) depende del contrato, no al revés.
 
 ## 3. Patrones de diseño (los que trabajan en este proyecto)
 
@@ -217,7 +217,7 @@ Los que trabajan en este código:
 // El contrato (Repositorios/IRepositorioProducto.cs):
 Task<Producto?> ObtenerPorCodigoAsync(string codigo);
 
-// ServicioProducto lo usa SIN saber si detrás hay SQL Server, otro motor
+// ServicioProducto lo usa SIN saber si detrás hay PostgreSQL, otro motor
 // o un diccionario en memoria (las pruebas). Por eso el segundo motor
 // (v4) puede llegar sin tocar una línea del servicio.
 ```
@@ -263,7 +263,7 @@ builder.Services.AddScoped<IRepositorioProducto>(_ => fabrica.CrearRepositorioPr
 ### Estrategia — el patrón que va de regalo
 
 La pareja "interfaz + implementaciones intercambiables"
-(`RepositorioProductoSqlServer`, el falso de las pruebas — y los
+(`RepositorioProductoPostgres`, el falso de las pruebas — y los
 repositorios de cada motor que vengan) es la esencia de Strategy. La
 elección no cambia en caliente: se hace UNA vez al arrancar — pero el
 mecanismo es el mismo: quien usa la interfaz jamás pregunta cuál

@@ -1,4 +1,4 @@
-# Investigación y decisiones — Versión 1: producto + SQL Server (C#/ASP.NET Core)
+# Investigación y decisiones — Versión 1: producto + PostgreSQL (C#/ASP.NET Core)
 
 > **Versión 1** · **Lectura opcional** (el porqué de las decisiones del plan,
 > con las alternativas que se evaluaron y descartaron). Complementa a
@@ -10,7 +10,7 @@
 
 **Alternativas descartadas:** Entity Framework Core (el ORM de .NET) y
 Dapper (micro-ORM).
-**Decisión:** `SqlConnection` + `SqlCommand` con SQL parametrizado a mano.
+**Decisión:** `NpgsqlConnection` + `NpgsqlCommand` con SQL parametrizado a mano.
 **Por qué:** el objetivo es aprender **SQL y arquitectura**, no un ORM. EF
 esconde exactamente lo que el curso quiere mostrar (el SQL, el mapeo, las
 transacciones); Dapper es razonable pero igual tapa el ciclo
@@ -25,7 +25,7 @@ refactorizar a capas después.
 **Decisión:** controller → servicio → repositorio con interfaces desde v1.
 **Por qué:** el valor de la v1 es el **esqueleto** sobre el que crecen las
 demás versiones sin reescribir. El criterio de aceptación 6 (probar el
-servicio con un repositorio falso, sin SQL Server) **solo es posible** si el
+servicio con un repositorio falso, sin PostgreSQL) **solo es posible** si el
 servicio depende de una `interface` — la prueba objetiva de que las capas
 quedaron bien cortadas.
 
@@ -43,7 +43,7 @@ v3, solo el ensamblador cambia.
 ## D4 — La BD completa desde la v1 (la API solo toca `producto`)
 
 **Alternativa descartada:** una BD mínima que crece con cada versión.
-**Decisión:** `db/bdfacturas.sql` crea `bdfacturas` COMPLETA (12 tablas,
+**Decisión:** `db/bdfacturas_postgres.sql` crea `bdfacturas` COMPLETA (12 tablas,
 triggers, SPs); la regla es que el código de v1 solo puede nombrar
 `producto`.
 **Por qué:** los estudiantes ya vieron bases de datos — la BD es
@@ -69,19 +69,19 @@ didáctico: **el tipo es regla** — `stock` es `int?`, así que un `7.5` o un
 (`Modelos/`, en v1 `Producto`). Por eso viven en su propia carpeta
 `Peticiones/`: describen lo que LLEGA en cada verbo, no lo que ES.
 
-## D6 — SQL Server como primer motor (y su inicializador)
+## D6 — PostgreSQL como primer motor
 
-**Alternativas descartadas:** empezar con un motor liviano y dejar SQL
-Server para después.
-**Decisión:** v1 arranca con SQL Server 2022 en contenedor (edición
-Developer, gratuita) + un contenedor `sqlserver-init` que crea la BD la
-primera vez.
-**Por qué:** es el motor del ecosistema del curso (C#/.NET) y el que los
-estudiantes encontrarán en las empresas del mundo Microsoft. El precio es
-doble: pide ~2 GB de RAM, y **no ejecuta scripts montados automáticamente**
-— de ahí el inicializador, que además es lección de Docker (un contenedor
-que hace su trabajo y termina, con `service_completed_successfully` como
-semáforo para la API).
+**Alternativas descartadas:** empezar con SQL Server (el motor "natural"
+del ecosistema .NET) o con MariaDB.
+**Decisión:** v1 arranca con PostgreSQL 16 en contenedor (alpine, ~50 MB).
+**Por qué:** es el motor libre de referencia de la industria, liviano
+(arranca en segundos, sin requisitos de RAM) y AMIGO de Docker: ejecuta
+solo los scripts montados en `/docker-entrypoint-initdb.d/`, así que el
+compose de la v1 queda en DOS servicios sin contenedor inicializador. Y
+deja una lección pendiente a propósito: cuando llegue el segundo motor
+(SQL Server), que NO tiene ese mecanismo, se entenderá el valor del
+patrón inicializador por contraste. Npgsql (el proveedor ADO.NET) es de
+primera clase en .NET — el ecosistema no obliga a casarse con su motor.
 
 ## D7 — dotnet watch dentro del contenedor (imagen SDK, no runtime)
 
@@ -95,13 +95,13 @@ El matiz de los volúmenes anónimos importa: los compilados de Linux (los
 del contenedor) no deben mezclarse con los de Windows (los del IDE del
 estudiante).
 
-## D8 — Docker compose desde la v1 (tres servicios)
+## D8 — Docker compose desde la v1 (dos servicios)
 
 **Alternativa descartada:** `docker run` a mano y la API por fuera.
-**Decisión:** `docker-compose.yml` con `sqlserver` + `sqlserver-init` +
-`api-facturas` desde v1 — `docker compose up -d --build` deja todo
-funcionando.
+**Decisión:** `docker-compose.yml` con `postgres` + `api-facturas` desde
+v1 — `docker compose up -d --build` deja todo funcionando.
 **Por qué:** el Artículo 4 de la constitución ("un solo comando") es
 permanente — y la constitución gana. El compose de v1 **crece por
-versiones** (v3 suma PostgreSQL, v4 MariaDB, v6 el front): la
-infraestructura también se construye por incrementos.
+versiones** (más adelante los otros motores, la API genérica y el front
+Flask con Jinja2): la infraestructura también se construye por
+incrementos.

@@ -1,11 +1,11 @@
 {
   "info": {
-    "name": "API Facturas v1 (C# + SQL Server)",
-    "description": "Los endpoints de la v1 en orden didáctico: diagnóstico → lecturas → ciclo de escritura → la pareja PUT/PATCH → los errores. Cada petición explica en su descripción qué esperar. La variable {{base}} apunta al proyecto del curso (localhost:8032); para probar SU reconstrucción cámbiela a localhost:8132.",
+    "name": "API Facturas v1 (C# + PostgreSQL)",
+    "description": "Los endpoints de la v1 en orden didáctico: diagnóstico → lecturas → ciclo de escritura → la pareja PUT/PATCH → los errores. Cada petición explica en su descripción qué esperar. La variable {{base}} apunta al proyecto del curso (localhost:8042); para probar SU reconstrucción cámbiela a localhost:8142.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base", "value": "http://localhost:8032" }
+    { "key": "base", "value": "http://localhost:8042" }
   ],
   "item": [
     {
@@ -21,7 +21,7 @@
       "request": {
         "method": "GET",
         "url": "{{base}}/api/producto",
-        "description": "200 con el sobre {tabla, limite, total: 8, datos: [...]} — los 8 productos de ejemplo de db/bdfacturas.sql, ordenados por código."
+        "description": "200 con el sobre {tabla, limite, total: 8, datos: [...]} — los 8 productos de ejemplo de db/bdfacturas_postgres.sql, ordenados por código."
       }
     },
     {

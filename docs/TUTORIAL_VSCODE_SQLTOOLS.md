@@ -1,37 +1,38 @@
-# Tutorial — Administrar SQL Server desde VS Code con SQLTools
+# Tutorial — Administrar PostgreSQL desde VS Code con SQLTools
 
 > Tutorial paso a paso para explorar y consultar **bdfacturas** sin salir de
-> VS Code, usando la extensión **SQLTools** con su driver de SQL Server.
-> Es la alternativa "de programador" al [tutorial de
-> SSMS](TUTORIAL_SSMS.md): misma base de datos, pero en el editor donde ya
-> está su código — ideal para consultar mientras programa.
+> VS Code, usando la extensión **SQLTools** con su driver de PostgreSQL.
+> Es el camino "de programador": la base de datos en el editor donde ya
+> está su código — ideal para consultar mientras programa. (Si prefiere
+> una herramienta dedicada, pgAdmin o DBeaver sirven igual con los
+> mismos datos de conexión.)
 >
 > **Prerrequisitos:** VS Code en Windows y el proyecto corriendo
 > (`docker compose up -d --build` desde la raíz — ver el
-> [README](../README.md)). SQL Server queda publicado en `localhost,11463`.
+> [README](../README.md)). PostgreSQL queda publicado en `localhost:15442`.
 
 ---
 
-## Paso 0 — Instalar SQLTools y su driver de SQL Server
+## Paso 0 — Instalar SQLTools y su driver de PostgreSQL
 
 Abra la vista de **Extensiones** (`Ctrl+Shift+X`) y busque `sqltools`.
 Instale **dos** extensiones (ambas de Matheus Teixeira):
 
 1. **SQLTools** (`mtxr.sqltools`) — el administrador de bases de datos.
-2. **SQLTools SQL Server** (`mtxr.sqltools-driver-mssql`) — el conector
-   para SQL Server (en el Marketplace también aparece como *SQLTools
-   Microsoft SQL Server/Azure*):
+2. **SQLTools PostgreSQL** (`mtxr.sqltools-driver-pg`) — el conector
+   para PostgreSQL (en el Marketplace aparece como *SQLTools
+   PostgreSQL/Cockroach Driver*):
 
-![Paso 0 — el driver de SQL Server en el Marketplace](img_sqltools/paso00_marketplace_driver.jpg)
+![Paso 0 — el driver de PostgreSQL en el Marketplace](img_sqltools/paso00_marketplace_driver.jpg)
 
 Ojo al elegir: en la lista hay varias extensiones parecidas — la del
 curso es la de **Matheus Teixeira**, la misma casa de SQLTools (la
 página lo dice: *"This package is part of vscode-sqltools"*; verifique
-el identificador `mtxr.sqltools-driver-mssql` en el panel Marketplace).
+el identificador `mtxr.sqltools-driver-pg` en el panel Marketplace).
 
 > 💡 **¿Y esa calificación tan baja?** El driver aparece con pocas
 > estrellas y apenas un puñado de reseñas — casi todas quejas viejas por
-> un error de conexión con SQL Server moderno: el del **certificado
+> un error de conexión con PostgreSQL moderno: el del **certificado
 > autofirmado y el cifrado**. Ese problema tiene arreglo de una casilla
 > (la opción `trustServerCertificate` del paso 1) y este tutorial lo
 > deja configurado desde el principio.
@@ -45,7 +46,7 @@ el identificador `mtxr.sqltools-driver-mssql` en el panel Marketplace).
 Instalado se ve así (fíjese en el identificador y la versión en el
 panel Marketplace):
 
-![Paso 0 — el driver de SQL Server instalado](img_sqltools/paso00_driver_instalado.png)
+![Paso 0 — el driver de PostgreSQL instalado](img_sqltools/paso00_driver_instalado.png)
 
 Si el driver muestra **"Restart Required"**, haga clic ahí (o
 `Ctrl+Shift+P` → `Reload Window`): la ventana se recarga en segundos.
@@ -73,11 +74,11 @@ Llene el formulario con los datos del `docker-compose.yml`:
 | Connection name | `bdfacturas (csharp)` | Libre — cómo se verá en el panel |
 | Connect using | `Server and Port` | Conexión directa por red |
 | Server Address | `localhost` | El puerto está publicado hacia SU PC |
-| Port | `11463` | El puerto del host del compose (`11463:1433`) |
-| Database | `bdfacturas_sqlserver_local` | La BD que crea el inicializador |
+| Port | `15442` | El puerto del host del compose (`15442:1433`) |
+| Database | `bdfacturas_postgres_local` | La BD que crea el inicializador |
 | Username | `sa` | Usuario administrador del contenedor |
 | Use password | `Save password` | Didáctico: credenciales de juguete |
-| Password | `Paradigmas123!` | La del compose |
+| Password | `Construccion123!` | La del compose |
 
 ![Paso 1 — el formulario y las opciones de contraseña](img_sqltools/paso01_formulario_password.png)
 
@@ -87,10 +88,10 @@ opciones específicas del driver, visibles en la captura):
 | Opción | Valor | Por qué |
 |---|---|---|
 | `encrypt` | ✅ (viene marcado) | La conexión viaja cifrada |
-| `trustServerCertificate` | ✅ **márquelo usted** | El mismo *Trust Server Certificate* de SSMS: el contenedor usa certificado autofirmado — sin esto el test falla |
+| `trustServerCertificate` | ✅ **márquelo usted** | El mismo *Trust Server Certificate* de pgAdmin: el contenedor usa certificado autofirmado — sin esto el test falla |
 
-> El puerto es la clave: **11463, no 1433**. Dentro de la red de Docker
-> la BD escucha en 1433, pero hacia su PC el compose la publica en 11463
+> El puerto es la clave: **15442, no 1433**. Dentro de la red de Docker
+> la BD escucha en 1433, pero hacia su PC el compose la publica en 15442
 > (las "dos direcciones" que explica
 > [CONCEPTOS_DOCKER.md](CONCEPTOS_DOCKER.md)). La API usa la interna;
 > usted, desde Windows, la publicada.
@@ -106,7 +107,7 @@ connected!"* en verde; luego **SAVE CONNECTION** y **CONNECT NOW**.
 > **Si le sale este error al conectar o al hacer TEST:**
 >
 > ```
-> Error opening connection Failed to connect to localhost:11463
+> Error opening connection Failed to connect to localhost:15442
 > - self signed certificate; if the root CA is installed locally,
 > try running Node.js with --use-system-ca
 > ```
@@ -130,10 +131,10 @@ connected!"* en verde; luego **SAVE CONNECTION** y **CONNECT NOW**.
 >        "name": "bdfacturas (csharp)",
 >        "driver": "MSSQL",
 >        "server": "localhost",
->        "port": 11463,
->        "database": "bdfacturas_sqlserver_local",
+>        "port": 15442,
+>        "database": "bdfacturas_postgres_local",
 >        "username": "sa",
->        "password": "Paradigmas123!",
+>        "password": "Construccion123!",
 >        "mssqlOptions": { "encrypt": true, "trustServerCertificate": true }
 >      }
 >    ]
@@ -143,7 +144,7 @@ connected!"* en verde; luego **SAVE CONNECTION** y **CONNECT NOW**.
 > 3. **Si TAMBIÉN falla con el settings.json** (regresión conocida de
 >    versiones recientes del driver): instale una versión anterior de la
 >    extensión del driver — panel de **Extensiones** (`Ctrl+Shift+X`) →
->    busque **SQLTools Microsoft SQL Server/Azure** → clic en el
+>    busque **SQLTools Microsoft PostgreSQL/Azure** → clic en el
 >    engranaje ⚙ → **Install Specific Version…** → elija una versión
 >    anterior a la instalada. VS Code la deja fijada y no la vuelve a
 >    actualizar sola.
@@ -162,24 +163,21 @@ connected!"* en verde; luego **SAVE CONNECTION** y **CONNECT NOW**.
 
 Con la conexión activa, expanda el árbol en el panel CONNECTIONS:
 
-**bdfacturas (csharp)** → **bdfacturas_sqlserver_local** → **Schemas**
+**bdfacturas (csharp)** → **bdfacturas_postgres_local** → **Schemas**
 → **dbo** → **Tables**, y dentro de **producto** → **Columns**:
 
 ![Paso 2 — el árbol con las 12 tablas y las columnas de producto](img_sqltools/paso02_arbol_columnas.png)
 
 Para leer en el árbol:
 
-- En SQL Server las tablas viven dentro de un **esquema** — el del
-  curso es `dbo`, el esquema por defecto (por eso en SSMS las tablas se
+- En PostgreSQL las tablas viven dentro de un **esquema** — el del
+  curso es `dbo`, el esquema por defecto (por eso en pgAdmin las tablas se
   llaman `dbo.producto`).
 - En **producto**: la llavecita junto a `codigo` es la **PK**; cada
   columna muestra su tipo y su `NOT NULL` (`NVARCHAR(10)`, `INT`,
   `DECIMAL(18,2)`).
 - La tabla también expone sus **Indexes** y sus **Triggers** — los
   triggers de facturación están ahí, visibles desde el editor.
-- Si aparece una tabla **`sysdiagrams`** que usted no creó: es la tabla
-  interna donde SQL Server guarda los diagramas del [tutorial de
-  SSMS](TUTORIAL_SSMS.md) — del motor, no de bdfacturas.
 - SQLTools abre además una pestaña `bdfacturas (csharp).session.sql`:
   un archivo de borrador para escribir SQL contra esta conexión (lo
   usamos en el paso 3). Está ignorado en `.gitignore` — es suyo, no del
@@ -265,18 +263,18 @@ registra INSERT → SELECT (con 9) → DELETE → SELECT, y la grilla final
 vuelve a los **8 productos** — el ciclo de escritura completo sin salir
 del editor.
 
-> El mismo respeto que en SSMS: DELETE **siempre con WHERE**. Y la misma
+> El mismo respeto que en pgAdmin: DELETE **siempre con WHERE**. Y la misma
 > moraleja: entre el paso 1 y el 3, PR009 también existía para la API
-> (`http://localhost:8032/api/producto/PR009`) — un solo dato, muchos
+> (`http://localhost:8042/api/producto/PR009`) — un solo dato, muchos
 > clientes.
 
 ---
 
-## Cierre — ¿SSMS o SQLTools?
+## Cierre — ¿pgAdmin o SQLTools?
 
 Los dos hablan el mismo SQL con la misma BD; cambia el contexto:
 
-| | SSMS | SQLTools |
+| | pgAdmin | SQLTools |
 |---|---|---|
 | Dónde vive | Aplicación de escritorio aparte | Dentro de VS Code |
 | Instalación | Instalador de Microsoft | 2 extensiones + conexión |
@@ -284,7 +282,7 @@ Los dos hablan el mismo SQL con la misma BD; cambia el contexto:
 | Ideal para | Entender y administrar la BD | El día a día escribiendo la API |
 
 No hay que elegir: en este curso conviven. Y la lección de fondo es la
-misma de los dos tutoriales: **la base de datos es una sola** — SSMS,
+misma de los dos tutoriales: **la base de datos es una sola** — pgAdmin,
 SQLTools y la API de C# son solo tres clientes distintos del mismo SQL
 Server del compose.
 
@@ -292,8 +290,8 @@ Server del compose.
 
 | Paso | Qué aprendió |
 |---|---|
-| 0 | Instalar SQLTools + driver de SQL Server (y el tropiezo del driver faltante) |
-| 1 | Crear la conexión (localhost,11463) con test y guardarla |
+| 0 | Instalar SQLTools + driver de PostgreSQL (y el tropiezo del driver faltante) |
+| 1 | Crear la conexión (localhost:15442) con test y guardarla |
 | 2 | Explorar el árbol: tablas, columnas, PK; la lupa |
 | 3 | SQL propio con `Ctrl+E Ctrl+E`: el JOIN de 3 tablas |
 | 4 | Ciclo de escritura: INSERT → verificar → DELETE con WHERE |

@@ -23,20 +23,20 @@ var builder = WebApplication.CreateBuilder(args);
 // ------------------------------------------------------------
 // Aquí se le dice al contenedor de dependencias de .NET qué clase
 // concreta entregar cuando alguien pida una INTERFAZ:
-//   - pide IRepositorioProducto → recibe RepositorioProductoSqlServer
+//   - pide IRepositorioProducto → recibe RepositorioProductoPostgres
 //   - pide IServicioProducto    → recibe ServicioProducto
 // El controlador y el servicio JAMÁS hacen "new" de clases concretas:
 // las reciben por constructor (inyección de dependencias).
 // Cuando la v3 agregue otro motor, SOLO estas líneas cambiarán.
 
 // La cadena de conexión: viene de appsettings.json, y en Docker la
-// sobreescribe la variable de entorno ConnectionStrings__SqlServer.
-var cadenaConexion = builder.Configuration.GetConnectionString("SqlServer")
-    ?? throw new InvalidOperationException("Falta la cadena de conexión 'SqlServer'.");
+// sobreescribe la variable de entorno ConnectionStrings__Postgres.
+var cadenaConexion = builder.Configuration.GetConnectionString("Postgres")
+    ?? throw new InvalidOperationException("Falta la cadena de conexión 'Postgres'.");
 
 // AddScoped = "una instancia por petición HTTP" (cada request estrena la suya):
 builder.Services.AddScoped<IRepositorioProducto>(
-    _ => new RepositorioProductoSqlServer(cadenaConexion));
+    _ => new RepositorioProductoPostgres(cadenaConexion));
 builder.Services.AddScoped<IServicioProducto, ServicioProducto>();
 
 // ------------------------------------------------------------
@@ -77,7 +77,7 @@ builder.Services.AddControllers()
 // ------------------------------------------------------------
 // Swashbuckle lee los controladores y sus clases de datos y genera una página
 // donde se ven TODOS los endpoints y se pueden probar desde el
-// navegador (http://localhost:8032/swagger).
+// navegador (http://localhost:8042/swagger).
 builder.Services.AddEndpointsApiExplorer();   // descubre los endpoints
 builder.Services.AddSwaggerGen();             // arma el documento OpenAPI
 
@@ -98,7 +98,7 @@ app.MapGet("/", () => Results.Json(new
 {
     mensaje = "API Facturas funcionando",
     version = "v1",
-    contratos = "docs/spec_kit/versiones/v1_producto_sqlserver/6_contracts.md"
+    contratos = "docs/spec_kit/versiones/v1_producto_postgres/6_contracts.md"
 }));
 
 // MapControllers enciende las rutas declaradas con atributos en los
@@ -106,5 +106,5 @@ app.MapGet("/", () => Results.Json(new
 app.MapControllers();
 
 // Arrancar y quedarse escuchando (el puerto lo fija ASPNETCORE_URLS
-// en el Dockerfile: 8032):
+// en el Dockerfile: 8042):
 app.Run();

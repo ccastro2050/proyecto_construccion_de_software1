@@ -1,10 +1,10 @@
 // ============================================================
-// RepositorioProductoSqlServer — la capa de DATOS de la v1.
+// RepositorioProductoPostgres — la capa de DATOS de la v1.
 //
 // Única clase del sistema que habla SQL y que conoce la conexión.
 // Cumple el contrato IRepositorioProducto.
 //
-// Usa ADO.NET "crudo" (SqlConnection + SqlCommand) a propósito:
+// Usa ADO.NET "crudo" (NpgsqlConnection + NpgsqlCommand) a propósito:
 // el SQL queda VISIBLE y parametrizado — sin ORM que lo esconda.
 // Reglas de la constitución que se cumplen aquí:
 // - SQL SIEMPRE con parámetros @nombre (nunca concatenar valores).
@@ -12,18 +12,18 @@
 // ============================================================
 
 using ApiFacturas.Modelos;
-using Microsoft.Data.SqlClient;   // el cliente oficial de SQL Server
+using Npgsql;   // el proveedor oficial de PostgreSQL
 
 namespace ApiFacturas.Repositorios;
 
-public class RepositorioProductoSqlServer : IRepositorioProducto
+public class RepositorioProductoPostgres : IRepositorioProducto
 {
     // La cadena de conexión llega POR CONSTRUCTOR (este archivo no
     // sabe de appsettings ni de variables de entorno — eso es del
     // ensamblador). readonly = se asigna una vez.
     private readonly string _cadenaConexion;
 
-    public RepositorioProductoSqlServer(string cadenaConexion)
+    public RepositorioProductoPostgres(string cadenaConexion)
     {
         _cadenaConexion = cadenaConexion;
     }
@@ -34,9 +34,9 @@ public class RepositorioProductoSqlServer : IRepositorioProducto
 
     /// <summary>Abre una conexión nueva. El "await using" del que llama
     /// garantiza que se cierre sola al terminar (aunque haya error).</summary>
-    private async Task<SqlConnection> AbrirConexionAsync()
+    private async Task<NpgsqlConnection> AbrirConexionAsync()
     {
-        var conexion = new SqlConnection(_cadenaConexion);
+        var conexion = new NpgsqlConnection(_cadenaConexion);
         await conexion.OpenAsync();
         return conexion;
     }
@@ -44,7 +44,7 @@ public class RepositorioProductoSqlServer : IRepositorioProducto
     /// <summary>Convierte la fila actual del lector en un objeto del
     /// MODELO. Los índices (0,1,2,3) son el orden de las columnas del
     /// SELECT; GetDecimal/GetInt32 leen ya con el tipo correcto.</summary>
-    private static Producto ArmarProducto(SqlDataReader lector)
+    private static Producto ArmarProducto(NpgsqlDataReader lector)
     {
         return new Producto
         {
@@ -63,13 +63,13 @@ public class RepositorioProductoSqlServer : IRepositorioProducto
     {
         // El SQL con PARÁMETROS (@limite): el valor viaja por aparte y
         // el motor jamás lo confunde con SQL — eso evita la inyección.
-        // "TOP (@limite)" es el LIMIT del dialecto SQL Server.
-        const string sql = @"SELECT TOP (@limite) codigo, nombre, stock, valorunitario
-                             FROM producto ORDER BY codigo";
+        // "LIMIT @limite" es el TOP del dialecto PostgreSQL (y va al final).
+        const string sql = @"SELECT codigo, nombre, stock, valorunitario
+                             FROM producto ORDER BY codigo LIMIT @limite";
 
         // "await using" = úsalo y ciérralo solo al salir del bloque:
         await using var conexion = await AbrirConexionAsync();
-        await using var comando = new SqlCommand(sql, conexion);
+        await using var comando = new NpgsqlCommand(sql, conexion);
         // Enlazar el valor al parámetro:
         comando.Parameters.AddWithValue("@limite", limite);
 
@@ -90,7 +90,7 @@ public class RepositorioProductoSqlServer : IRepositorioProducto
                              FROM producto WHERE codigo = @codigo";
 
         await using var conexion = await AbrirConexionAsync();
-        await using var comando = new SqlCommand(sql, conexion);
+        await using var comando = new NpgsqlCommand(sql, conexion);
         comando.Parameters.AddWithValue("@codigo", codigo);
 
         await using var lector = await comando.ExecuteReaderAsync();
@@ -108,7 +108,7 @@ public class RepositorioProductoSqlServer : IRepositorioProducto
                              VALUES (@codigo, @nombre, @stock, @valorunitario)";
 
         await using var conexion = await AbrirConexionAsync();
-        await using var comando = new SqlCommand(sql, conexion);
+        await using var comando = new NpgsqlCommand(sql, conexion);
         // Los valores salen del OBJETO del modelo (ya tipados y limpios):
         comando.Parameters.AddWithValue("@codigo", producto.Codigo);
         comando.Parameters.AddWithValue("@nombre", producto.Nombre);
@@ -139,7 +139,7 @@ public class RepositorioProductoSqlServer : IRepositorioProducto
                   "WHERE codigo = @codigo_clave";
 
         await using var conexion = await AbrirConexionAsync();
-        await using var comando = new SqlCommand(sql, conexion);
+        await using var comando = new NpgsqlCommand(sql, conexion);
         foreach (var (columna, valor) in datos)
         {
             comando.Parameters.AddWithValue($"@{columna}", valor);
@@ -147,7 +147,7 @@ public class RepositorioProductoSqlServer : IRepositorioProducto
         comando.Parameters.AddWithValue("@codigo_clave", codigo);
 
         // En UPDATE/DELETE, ExecuteNonQuery devuelve las FILAS AFECTADAS.
-        // Nota didáctica: SQL Server cuenta las filas que CUMPLIERON el
+        // Nota didáctica: PostgreSQL cuenta las filas que CUMPLIERON el
         // WHERE (aunque el valor nuevo sea igual al viejo) — por eso un
         // PATCH con el mismo valor reporta 1 fila, como debe ser.
         return await comando.ExecuteNonQueryAsync();
@@ -158,7 +158,7 @@ public class RepositorioProductoSqlServer : IRepositorioProducto
         const string sql = "DELETE FROM producto WHERE codigo = @codigo";
 
         await using var conexion = await AbrirConexionAsync();
-        await using var comando = new SqlCommand(sql, conexion);
+        await using var comando = new NpgsqlCommand(sql, conexion);
         comando.Parameters.AddWithValue("@codigo", codigo);
         return await comando.ExecuteNonQueryAsync();
     }

@@ -36,7 +36,7 @@ cuidan las relaciones entre tablas.
 > Transacciones simultáneas no se pisan: cada una ve un estado coherente.
 
 Dos cajeros facturando el MISMO producto al tiempo no pueden descontar el
-mismo stock dos veces. SQL Server aísla las transacciones (con niveles
+mismo stock dos veces. PostgreSQL aísla las transacciones (con niveles
 configurables) para que el resultado sea como si hubieran pasado una
 después de la otra.
 
@@ -48,7 +48,7 @@ log de transacciones) — no en memoria esperando a que algo la guarde.
 
 ## 3. Dónde vive esto en el proyecto
 
-- Los **triggers** de `productosporfactura` (ver `db/bdfacturas.sql`)
+- Los **triggers** de `productosporfactura` (ver `db/bdfacturas_postgres.sql`)
   mantienen `factura.total` y `producto.stock` — y corren DENTRO de la
   transacción del INSERT/UPDATE/DELETE que los disparó: si algo falla,
   todo se revierte junto (atomicidad + consistencia).
@@ -68,7 +68,7 @@ curso usa un motor relacional.
 
 ## 5. Ejercicio (véalo usted mismo)
 
-Conéctese a la BD (SQLTools a `localhost,11463`, usuario `sa`) y pruebe:
+Conéctese a la BD (SQLTools a `localhost:15442`, usuario `sa`) y pruebe:
 
 ```sql
 BEGIN TRANSACTION;
@@ -86,9 +86,9 @@ DELETE FROM persona WHERE codigo = 'P001';
 
 1. Härder, T. & Reuter, A. — *Principles of Transaction-Oriented Database
    Recovery* (ACM Computing Surveys, 1983): el artículo que acuñó "ACID".
-2. Microsoft — Transacciones en SQL Server:
+2. Microsoft — Transacciones en PostgreSQL:
    <https://learn.microsoft.com/sql/t-sql/language-elements/transactions-transact-sql>
 3. Kleppmann, M. — *Designing Data-Intensive Applications* (O'Reilly,
    2017), cap. 7: la mejor discusión moderna de ACID.
 4. En este repositorio: las tablas, FK y triggers de bdfacturas en el
-   [modelo de datos de la v1](spec_kit/versiones/v1_producto_sqlserver/5_data_model.md).
+   [modelo de datos de la v1](spec_kit/versiones/v1_producto_postgres/5_data_model.md).

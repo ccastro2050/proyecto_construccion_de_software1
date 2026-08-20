@@ -1,4 +1,4 @@
-# Tareas — Versión 1: api_facturas con producto + SQL Server (C#/ASP.NET Core)
+# Tareas — Versión 1: api_facturas con producto + PostgreSQL (C#/ASP.NET Core)
 
 > **Versión 1** · El orden de construcción, partiendo de CERO. Cada fase
 > termina en algo **verificable**. Requisitos: [2_spec.md](2_spec.md) ·
@@ -8,27 +8,25 @@
 ---
 
 ## Fase 0 — Base de datos y esqueleto
-- [ ] Copiar a `db/` los DOS archivos **provistos** con esta versión:
-      `bdfacturas.sql` (la BD completa en dialecto SQL Server — no se
-      escribe ni se genera con IA) e `init.sh` (el inicializador; ver
-      [3_plan.md](3_plan.md) §4.6).
-- [ ] Crear el `docker-compose.yml` con los servicios `sqlserver` (imagen
-      2022, volumen `mssqldata`, puerto 11463, healthcheck con sqlcmd) y
-      `sqlserver-init` (misma imagen, monta `./db`, corre `init.sh` y
-      termina) — ver [3_plan.md](3_plan.md) §5. Levantar:
-      `docker compose up -d`.
+- [ ] Copiar a `db/` el archivo **provisto** con esta versión:
+      `bdfacturas_postgres.sql` (la BD completa en dialecto PostgreSQL —
+      no se escribe ni se genera con IA; ver [3_plan.md](3_plan.md) §4.6).
+- [ ] Crear el `docker-compose.yml` con el servicio `postgres` (imagen
+      16-alpine, volumen `pgdata`, puerto 15442, healthcheck con
+      pg_isready, y el script montado en `/docker-entrypoint-initdb.d/`)
+      — ver [3_plan.md](3_plan.md) §5. Levantar: `docker compose up -d`.
 - [ ] Crear `api_facturas/` con subcarpetas `Modelos/`, `Peticiones/`, `Controllers/`,
       `Servicios/`, `Repositorios/`, `Excepciones/` y `pruebas/`.
 
-**Verificar:** `docker compose ps -a` muestra `sqlserver (healthy)` y
-`sqlserver-init` en `Exited (0)`; un cliente SQL a `localhost:11463`
-(usuario `sa`) ve las **12 tablas** y `SELECT count(*) FROM producto` da **8**.
+**Verificar:** `docker compose ps` muestra `postgres (healthy)`; un
+cliente SQL a `localhost:15442` (usuario `postgres`) ve las **12 tablas**
+y `SELECT count(*) FROM producto` da **8**.
 
 ## Fase 1 — El proyecto .NET y el modelo Producto (la clase entidad)
 - [ ] `ApiFacturas.csproj`: proyecto Web de .NET 10, paquete
-      `Microsoft.Data.SqlClient`, y la exclusión de `pruebas/**`.
+      `Npgsql`, y la exclusión de `pruebas/**`.
 - [ ] `appsettings.json` con la cadena de conexión (default
-      `localhost,11463` para correr sin Docker).
+      `localhost:15442` para correr sin Docker).
 - [ ] `Modelos/Producto.cs`: la clase entidad con las 4 propiedades
       tipadas `{ get; set; }` (`Codigo` string, `Nombre` string, `Stock`
       int, `Valorunitario` decimal). En C#, las propiedades SON los
@@ -46,12 +44,12 @@
 
 **Verificar:** `dotnet build` compila sin errores.
 
-## Fase 3 — Contratos (interfaces) y repositorio SQL Server
+## Fase 3 — Contratos (interfaces) y repositorio PostgreSQL
 - [ ] `Repositorios/IRepositorioProducto.cs`: interface con los 5 métodos
       async ([3_plan.md](3_plan.md) §4.1).
 - [ ] `Servicios/IServicioProducto.cs`: interface del servicio.
-- [ ] `Repositorios/RepositorioProductoSqlServer.cs`: ADO.NET con los SQL
-      de [3_plan.md](3_plan.md) §4.4 — `TOP (@limite)`, parámetros `@`,
+- [ ] `Repositorios/RepositorioProductoPostgres.cs`: ADO.NET con los SQL
+      de [3_plan.md](3_plan.md) §4.4 — `LIMIT @limite`, parámetros `@`,
       conexión por operación con `await using`, y el UPDATE con SET
       dinámico de lista blanca.
 
@@ -66,7 +64,7 @@
       API) y `pruebas/Programa.cs`: el servicio con un **repositorio falso
       en memoria** (una clase `: IRepositorioProducto` sobre un
       diccionario) — crear/listar/obtener/actualizar/eliminar y las
-      excepciones, SIN SQL Server.
+      excepciones, SIN PostgreSQL.
 
 **Verificar (criterio 6):** `dotnet run --project pruebas` termina con
 `CRITERIO 6 OK…`.
@@ -87,12 +85,12 @@ con `errores[]`), y el contraste PUT vs PATCH con `{"stock": 99}` (422 vs
 
 ## Fase 6 — Docker: un solo comando
 - [ ] `api_facturas/Dockerfile`: imagen `dotnet/sdk:10.0`, `dotnet watch`,
-      `ASPNETCORE_URLS` en 8032, `DOTNET_USE_POLLING_FILE_WATCHER`.
+      `ASPNETCORE_URLS` en 8042, `DOTNET_USE_POLLING_FILE_WATCHER`.
 - [ ] Agregar al `docker-compose.yml` el servicio `api-facturas`: `build:`,
-      código montado + `bin/` y `obj/` en volúmenes anónimos, puerto 8032,
-      variable `ConnectionStrings__SqlServer` con el host interno
-      `sqlserver,1433`, y `depends_on` de `sqlserver-init` con
-      `condition: service_completed_successfully`.
+      código montado + `bin/` y `obj/` en volúmenes anónimos, puerto 8042,
+      variable `ConnectionStrings__Postgres` con el host interno
+      `postgres:5432`, y `depends_on` de `postgres` con
+      `condition: service_healthy`.
 
 **Verificar:** `docker compose down` y luego `docker compose up -d --build`
 — UN comando deja BD y API funcionando (criterio 1); editar un `.cs`,

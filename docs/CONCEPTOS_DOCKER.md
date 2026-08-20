@@ -9,10 +9,10 @@
 ## 1. ¿Qué problema resuelve Docker?
 
 "En mi máquina sí funciona." Cada estudiante tiene un PC distinto (Windows,
-versiones, configuraciones) y un software como SQL Server instalado a mano
+versiones, configuraciones) y un software como PostgreSQL instalado a mano
 se comporta distinto en cada uno. Docker empaqueta el software **con todo
 su entorno** en una unidad estándar que corre igual en cualquier máquina.
-En este curso: nadie instala SQL Server ni .NET — todos corren **los mismos
+En este curso: nadie instala PostgreSQL ni .NET — todos corren **los mismos
 contenedores**.
 
 ## 2. Imagen
@@ -26,7 +26,7 @@ metadatos (qué comando arrancar, qué puerto expone).
 - Se construye en **capas** (cada instrucción de un `Dockerfile` es una
   capa que se cachea — por eso las reconstrucciones son rápidas).
 - Viene de un **registro** o se construye localmente. Este proyecto usa de
-  ambas: `mcr.microsoft.com/mssql/server:2022-latest` viene del registro de
+  ambas: `postgres:16-alpine` viene del registro de
   Microsoft; la de la API **se construye** con el `Dockerfile` de
   `api_facturas/` (base: `dotnet/sdk:10.0`).
 
@@ -39,15 +39,16 @@ con su propio sistema de archivos, red y espacio de procesos, aislado del
 resto de su PC.
 
 - De una imagen salen **muchos contenedores** (galletas del mismo molde).
-  En este proyecto pasa de verdad: `sqlserver` y `sqlserver-init` son DOS
-  contenedores de la MISMA imagen — uno es el motor, el otro solo ejecuta
-  el script de la BD y termina.
+  En los proyectos gemelos del curso pasa de verdad: el motor y su
+  inicializador son DOS contenedores de la MISMA imagen. Aquí PostgreSQL
+  no necesita inicializador — pero nada impide levantar dos `postgres`
+  del mismo molde.
 - Es **efímero y desechable**: `docker compose down` los destruye sin
   drama, y `up -d` los recrea idénticos.
 - **No es una máquina virtual**: comparte el kernel del host con
-  aislamiento de procesos. Por eso arranca en segundos (la excepción de
-  peso es SQL Server, que necesita ~2 GB de RAM por ser SQL Server, no por
-  ser contenedor).
+  aislamiento de procesos. Por eso arranca en segundos (y PostgreSQL
+  alpine pesa ~50 MB: motores hay de todos los tamaños — SQL Server, que
+  llegará en otra versión, pide ~2 GB él solito).
 
 **Analogía:** el contenedor es la **galleta**.
 
@@ -58,8 +59,8 @@ Si los contenedores son desechables… ¿dónde viven los datos? En
 
 | Mecanismo | Qué es | En este proyecto |
 |---|---|---|
-| **Volumen nombrado** | Espacio administrado por Docker, montado dentro del contenedor | `mssqldata` — los datos de SQL Server (por eso `down`/`up` los conserva) |
-| **Bind mount** | Una carpeta de SU disco montada dentro del contenedor | `./api_facturas:/app` (el código entra al contenedor y `dotnet watch` lo vigila) · `./db:/scripts:ro` (los scripts del init, solo lectura) |
+| **Volumen nombrado** | Espacio administrado por Docker, montado dentro del contenedor | `pgdata` — los datos de PostgreSQL (por eso `down`/`up` los conserva) |
+| **Bind mount** | Una carpeta de SU disco montada dentro del contenedor | `./api_facturas:/app` (el código entra al contenedor y `dotnet watch` lo vigila) · `./db/bdfacturas_postgres.sql:…initdb.d/…:ro` (el script que la BD auto-ejecuta al nacer, solo lectura) |
 | **Volumen anónimo** | Un hueco sin nombre que "tapa" una subcarpeta del bind mount | `/app/bin` y `/app/obj` — los compilados de Linux quedan DENTRO del contenedor, sin mezclarse con los de Windows |
 
 **La regla de oro que ata los tres conceptos:** *la imagen es inmutable, el
@@ -85,36 +86,27 @@ usted no escribe los pasos, escribe el resultado (el mismo espíritu de SDD).
 **El motor (imagen del registro + volumen + healthcheck):**
 
 ```yaml
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  postgres:
+    image: postgres:16-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Paradigmas123!"
+      POSTGRES_PASSWORD: "Construccion123!"
+      POSTGRES_DB: bdfacturas_postgres_local
     volumes:
-      - mssqldata:/var/opt/mssql     # volumen nombrado: los datos sobreviven
+      - pgdata:/var/lib/postgresql/data   # volumen nombrado: los datos sobreviven
+      - ./db/bdfacturas_postgres.sql:/docker-entrypoint-initdb.d/bdfacturas_postgres.sql:ro
     ports:
-      - "11463:1433"                 # "puerto en su PC : puerto interno"
+      - "15442:5432"                 # "puerto en su PC : puerto interno"
     healthcheck:                     # ¿la BD ya RESPONDE consultas?
-      test: ["CMD-SHELL", "…sqlcmd… -Q 'SELECT 1'…"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bdfacturas_postgres_local"]
 ```
 
-**El inicializador (la particularidad de SQL Server):**
-
-```yaml
-  sqlserver-init:
-    image: mcr.microsoft.com/mssql/server:2022-latest   # la MISMA imagen
-    depends_on:
-      sqlserver:
-        condition: service_healthy   # espera a que el motor RESPONDA
-    volumes:
-      - ./db:/scripts:ro             # init.sh + bdfacturas.sql, solo lectura
-    entrypoint: ["/bin/bash", "/scripts/init.sh"]
-    restart: "no"                    # corre UNA vez y termina
-```
-
-SQL Server no ejecuta automáticamente scripts montados (a diferencia de
-otros motores): este contenedor se conecta, crea la BD si no existe, corre
-el script y muere — un patrón de Docker que vale la pena conocer.
+**La particularidad (agradable) de PostgreSQL:** ejecuta AUTOMÁTICAMENTE
+los scripts montados en `/docker-entrypoint-initdb.d/` la primera vez
+(cuando el volumen de datos nace vacío) — por eso este proyecto no
+necesita contenedor inicializador. Otros motores (SQL Server, cuando
+llegue) no tienen ese mecanismo y exigen un contenedor que se conecte,
+corra el script UNA vez y muera: un patrón de Docker que este curso
+conocerá por contraste.
 
 **La API (imagen construida + código montado + hot-reload):**
 
@@ -126,25 +118,26 @@ el script y muere — un patrón de Docker que vale la pena conocer.
       - /app/bin                     # volúmenes anónimos: compilados de Linux
       - /app/obj                     #   sin mezclarse con los de Windows
     ports:
-      - "8032:8032"
+      - "8042:8042"
     environment:
-      # El host es el NOMBRE del servicio (sqlserver), no localhost:
-      ConnectionStrings__SqlServer: "Server=sqlserver,1433;…"
+      # El host es el NOMBRE del servicio (postgres), no localhost:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;…"
     depends_on:
-      sqlserver-init:
-        condition: service_completed_successfully
-        # ↑ arranca cuando el init TERMINÓ BIEN: la BD ya existe
+      postgres:
+        condition: service_healthy
+        # ↑ arranca cuando la BD ya RESPONDE (y ya se sembró sola)
 ```
 
 Las tres ideas que este archivo demuestra:
 
 1. **Dos redes de nombres**: hacia su PC, puertos publicados
-   (`localhost:8032`, `localhost,11463`); entre contenedores, nombres de
-   servicio (`sqlserver,1433`). El mismo motor tiene dos "direcciones"
+   (`localhost:8042`, `localhost:15442`); entre contenedores, nombres de
+   servicio (`postgres:5432`). El mismo motor tiene dos "direcciones"
    según quién lo llame.
-2. **Dependencias con condiciones**: `service_healthy` (el motor responde)
-   y `service_completed_successfully` (el init terminó bien) — la API no
-   arranca "por azar" sino cuando sus prerequisitos están listos.
+2. **Dependencias con condiciones**: `service_healthy` (el motor
+   responde) — la API no arranca "por azar" sino cuando su prerequisito
+   está listo. (`service_completed_successfully`, la condición para
+   contenedores que terminan, llegará con el inicializador de SQL Server.)
 3. **Desarrollo dentro del contenedor**: código montado + `dotnet watch` =
    guardar recompila, sin reconstruir la imagen. Solo se reconstruye
    (`--build`) cuando cambian el `.csproj` o el Dockerfile.

@@ -1,15 +1,15 @@
 # ==============================================================
-# Proyecto Construcción de Software — versión 1:
-# api_facturas (C#/ASP.NET Core) + PostgreSQL
+# Proyecto Construcción de Software — versión 1
 #
-#   Navegador → API FACTURAS (C#, :8042) → PostgreSQL (bdfacturas)
+#   Navegador → FRONT BLAZOR (:8041) → API FACTURAS (:8042) → PostgreSQL
+#
+# TRES servicios, y el front es uno de ellos DESDE LA v1: la versión
+# entrega su API *y* su pantalla. No hay una versión «de back» y otra
+# «de front» — ver docs/spec_kit/versiones/0_mapa_versiones.md.
 #
 # Uso: docker compose up -d --build     (UN solo comando)
 # Reset de la BD: docker compose down -v && docker compose up -d
-#
-# Este archivo CRECE por versiones: más adelante llegarán otros
-# motores y el front Flask (Jinja2).
-# ==============================================================
+# ===============================================================
 services:
 
   # --- PostgreSQL 16 (liviano: la imagen pesa ~50 MB) ---
@@ -55,6 +55,27 @@ services:
         condition: service_healthy
         # ↑ la API arranca cuando la BD ya RESPONDE (y como el script se
         #   auto-ejecutó al nacer, ya existe con sus 12 tablas y datos).
+
+  # --- FRONT Blazor Server v1 — la otra mitad de la versión ---
+  front-blazor:
+    build: ./front_blazor
+    container_name: facturas-front
+    restart: unless-stopped
+    ports:
+      - "8041:8041"              # http://localhost:8041
+    volumes:
+      - ./front_blazor:/app      # el código montado: guardar un .razor recompila solo
+      - /app/bin                 # bin y obj quedan DENTRO del contenedor
+      - /app/obj
+    environment:
+      # El NOMBRE del servicio, no localhost: dentro del contenedor del front,
+      # localhost sería el front mismo.
+      - UrlApi=http://api-facturas:8042
+    depends_on:
+      - api-facturas
+      # NO depende de postgres, y eso no es un olvido: el front no tiene nada
+      # que hacer con la base. Si algún día necesitara esa dependencia, sería
+      # la señal de que alguien rompió la arquitectura.
 
 volumes:
   pgdata:      # declaración del volumen nombrado (la "memoria" de la BD)

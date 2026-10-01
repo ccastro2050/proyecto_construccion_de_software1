@@ -98,7 +98,7 @@ app.MapGet("/", () => Results.Json(new
 {
     mensaje = "API Facturas funcionando",
     version = "v1",
-    contratos = "docs/spec_kit/versiones/v1_producto_postgres/6_contracts.md"
+    contratos = "docs/spec_kit/versiones/v1_producto/6_contracts.md"
 }));
 
 // MapControllers enciende las rutas declaradas con atributos en los

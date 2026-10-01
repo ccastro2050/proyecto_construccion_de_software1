@@ -28,7 +28,7 @@
     @*
         LOS DOS BOTONES DE GUARDAR: «la ficha completa» es el PUT (si falta un
         campo, 422) y «solo lo que cambie» es el PATCH (el mismo cuerpo, 200).
-        La pantalla NO le dice PUT ni PATCH a la persona.
+        La interfaz gráfica NO le dice PUT ni PATCH a la persona.
     *@
     <div class="botones">
         @if (editando)
@@ -101,7 +101,7 @@ else
         }
         else
         {
-            // El error NO borra lo que la persona escribio: queda en pantalla
+            // El error NO borra lo que la persona escribio: queda en interfaz gráfica
             // para que pueda corregirlo.
             Avisar(r.Mensaje!, true);
         }

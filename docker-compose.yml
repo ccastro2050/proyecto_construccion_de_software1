@@ -4,7 +4,7 @@
 #   Navegador → FRONT BLAZOR (:8041) → API FACTURAS (:8042) → PostgreSQL
 #
 # TRES servicios, y el front es uno de ellos DESDE LA v1: la versión
-# entrega su API *y* su pantalla. No hay una versión «de back» y otra
+# entrega su API *y* su interfaz. No hay una versión «de back» y otra
 # «de front» — ver docs/spec_kit/versiones/0_mapa_versiones.md.
 #
 # Uso: docker compose up -d --build     (UN solo comando)

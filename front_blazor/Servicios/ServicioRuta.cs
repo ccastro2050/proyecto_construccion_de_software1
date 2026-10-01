@@ -47,7 +47,7 @@ public class ServicioRuta(HttpClient cliente)
         }
         catch (Exception)
         {
-            // La API apagada llega aqui. La pantalla tiene que SEGUIR EN PIE.
+            // La API apagada llega aqui. La interfaz gráfica tiene que SEGUIR EN PIE.
             return Resultado<List<Ruta>>.Falla(
                 "No se pudo conectar con el servicio. Intente de nuevo en un momento.");
         }

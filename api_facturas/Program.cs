@@ -34,10 +34,34 @@ var builder = WebApplication.CreateBuilder(args);
 var cadenaConexion = builder.Configuration.GetConnectionString("Postgres")
     ?? throw new InvalidOperationException("Falta la cadena de conexión 'Postgres'.");
 
-// AddScoped = "una instancia por petición HTTP" (cada request estrena la suya):
+// AddScoped = "una instancia por petición HTTP" (cada request estrena la suya).
+//
+// SEIS recursos, SEIS pares de líneas: uno por cada tabla sin clave foránea
+// de la v1. No hay un registro genérico que sirva para cualquier tabla, y eso
+// es a propósito: con seis se ve de una qué rutas existen.
 builder.Services.AddScoped<IRepositorioProducto>(
     _ => new RepositorioProductoPostgres(cadenaConexion));
 builder.Services.AddScoped<IServicioProducto, ServicioProducto>();
+
+builder.Services.AddScoped<IRepositorioEmpresa>(
+    _ => new RepositorioEmpresaPostgres(cadenaConexion));
+builder.Services.AddScoped<IServicioEmpresa, ServicioEmpresa>();
+
+builder.Services.AddScoped<IRepositorioPersona>(
+    _ => new RepositorioPersonaPostgres(cadenaConexion));
+builder.Services.AddScoped<IServicioPersona, ServicioPersona>();
+
+builder.Services.AddScoped<IRepositorioRol>(
+    _ => new RepositorioRolPostgres(cadenaConexion));
+builder.Services.AddScoped<IServicioRol, ServicioRol>();
+
+builder.Services.AddScoped<IRepositorioRuta>(
+    _ => new RepositorioRutaPostgres(cadenaConexion));
+builder.Services.AddScoped<IServicioRuta, ServicioRuta>();
+
+builder.Services.AddScoped<IRepositorioUsuario>(
+    _ => new RepositorioUsuarioPostgres(cadenaConexion));
+builder.Services.AddScoped<IServicioUsuario, ServicioUsuario>();
 
 // ------------------------------------------------------------
 // 2. Los controladores y la validación de la petición (el 422)
@@ -98,7 +122,7 @@ app.MapGet("/", () => Results.Json(new
 {
     mensaje = "API Facturas funcionando",
     version = "v1",
-    contratos = "docs/spec_kit/versiones/v1_producto/6_contracts.md"
+    contratos = "docs/spec_kit/versiones/v1_sin_fk/6_contracts.md"
 }));
 
 // MapControllers enciende las rutas declaradas con atributos en los

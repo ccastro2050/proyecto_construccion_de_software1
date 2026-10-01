@@ -1,4 +1,4 @@
-# Plan técnico — Versión 1: producto + PostgreSQL (C#/ASP.NET Core)
+# Plan técnico — Versión 1: las seis tablas sin FK (C#/ASP.NET Core + Blazor)
 
 > **Versión 1** · CÓMO construir lo especificado en [2_spec.md](2_spec.md).
 > El porqué de cada decisión: [4_research.md](4_research.md) · contratos

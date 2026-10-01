@@ -1,4 +1,4 @@
-# Tareas — Versión 1: api_facturas con producto + PostgreSQL (C#/ASP.NET Core)
+# Tareas — Versión 1: las seis tablas sin FK, con su pantalla
 
 > **Versión 1** · El orden de construcción, partiendo de CERO. Cada fase
 > termina en algo **verificable**. Requisitos: [2_spec.md](2_spec.md) ·

@@ -1,4 +1,4 @@
-# Quickstart — Versión 1: arranque y smoke test
+# Quickstart — Versión 1: arranque y smoke test (API y pantalla)
 
 > **Versión 1** · Validación rápida de la versión ya construida. Si aún no
 > hay nada construido, empiece por [8_tasks.md](8_tasks.md).

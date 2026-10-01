@@ -1,0 +1,31 @@
+// ============================================================
+// PersonaReemplazo — la PETICION del PUT (reemplazo COMPLETO).
+//
+// Exige TODOS los campos. Un PUT con body parcial muere en 422
+// ANTES de llegar al controlador — esa es la semantica de PUT, y
+// queda escrita aqui, no en un comentario.
+//
+// La llave va en la RUTA, no en el body.
+// ============================================================
+
+using System.ComponentModel.DataAnnotations;
+
+namespace ApiFacturas.Peticiones;
+
+public class PersonaReemplazo
+{
+    [Required(ErrorMessage = "El campo nombre es obligatorio.")]
+    [StringLength(100, MinimumLength = 1,
+        ErrorMessage = "El campo nombre debe tener entre 1 y 100 caracteres.")]
+    public string? Nombre { get; set; }
+
+    [Required(ErrorMessage = "El campo email es obligatorio.")]
+    [StringLength(100, MinimumLength = 1,
+        ErrorMessage = "El campo email debe tener entre 1 y 100 caracteres.")]
+    public string? Email { get; set; }
+
+    [Required(ErrorMessage = "El campo telefono es obligatorio.")]
+    [StringLength(20, MinimumLength = 1,
+        ErrorMessage = "El campo telefono debe tener entre 1 y 20 caracteres.")]
+    public string? Telefono { get; set; }
+}

@@ -24,6 +24,36 @@ builder.Services.AddHttpClient<ServicioProducto>(cliente =>
     cliente.Timeout = TimeSpan.FromSeconds(10);
 });
 
+builder.Services.AddHttpClient<ServicioEmpresa>(cliente =>
+{
+    cliente.BaseAddress = new Uri(urlApi);
+    cliente.Timeout = TimeSpan.FromSeconds(10);
+});
+
+builder.Services.AddHttpClient<ServicioPersona>(cliente =>
+{
+    cliente.BaseAddress = new Uri(urlApi);
+    cliente.Timeout = TimeSpan.FromSeconds(10);
+});
+
+builder.Services.AddHttpClient<ServicioRol>(cliente =>
+{
+    cliente.BaseAddress = new Uri(urlApi);
+    cliente.Timeout = TimeSpan.FromSeconds(10);
+});
+
+builder.Services.AddHttpClient<ServicioRuta>(cliente =>
+{
+    cliente.BaseAddress = new Uri(urlApi);
+    cliente.Timeout = TimeSpan.FromSeconds(10);
+});
+
+builder.Services.AddHttpClient<ServicioUsuario>(cliente =>
+{
+    cliente.BaseAddress = new Uri(urlApi);
+    cliente.Timeout = TimeSpan.FromSeconds(10);
+});
+
 // ============================================================
 // UN SERVICIO POR RECURSO
 //

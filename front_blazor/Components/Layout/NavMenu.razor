@@ -1,9 +1,17 @@
 @*
    El menú nombra RECURSOS del dominio, no tablas ni rutas de la API.
    Dice «Productos», no «/api/producto».
+
+   SEIS entradas, una por tabla sin clave foránea: la v1 son las seis, y el
+   menú es la primera prueba de que están.
 *@
 <nav class="menu">
     <span class="marca">Facturas</span>
     <NavLink href="" Match="NavLinkMatch.All">Inicio</NavLink>
     <NavLink href="productos">Productos</NavLink>
+    <NavLink href="empresas">Empresas</NavLink>
+    <NavLink href="personas">Personas</NavLink>
+    <NavLink href="roles">Roles</NavLink>
+    <NavLink href="rutas">Rutas</NavLink>
+    <NavLink href="usuarios">Usuarios</NavLink>
 </nav>

@@ -117,21 +117,45 @@ docker compose up -d --build
 
 **Eso es todo.** La primera vez tarda unos minutos (descarga imágenes,
 PostgreSQL se siembra solo con el script montado, y la primera
-compilación de la API toma ~1 minuto más). Al terminar quedan corriendo la base de datos (bdfacturas
-completa en PostgreSQL) y la API:
+compilación toma ~1 minuto más). Al terminar quedan corriendo **tres
+contenedores**: la base de datos, la API y la **interfaz gráfica**.
+
+### Lo primero que hay que abrir
 
 | Qué | Dónde |
 |---|---|
-| **API Facturas** — diagnóstico | http://localhost:8042/ |
-| **Swagger** (documentación interactiva: ver y probar los endpoints) | http://localhost:8042/swagger |
-| Listar productos | http://localhost:8042/api/producto |
+| **La interfaz gráfica** — por aquí se empieza | **http://localhost:8041** |
+| **Swagger** — la API, para verla y probarla | http://localhost:8042/swagger |
+| La API — diagnóstico | http://localhost:8042/ |
 | PostgreSQL (para SQLTools/pgAdmin, opcional) | `localhost:15442` · `postgres`/`Construccion123!` |
 
-Pruebe la joya didáctica de la v1: PUT con solo `{"stock": 99}` → 422; el
-mismo body en PATCH → 200. Esa diferencia es parte de lo que enseña la
-versión (contratos exactos en el spec kit).
+> **La interfaz gráfica y la API son dos puertos distintos**, y conviene no
+> confundirlos: el **8041** es lo que se abre en el navegador; el **8042**
+> es lo que esa interfaz consume. Abrir `8041/swagger` da 404 — Swagger vive
+> en la API.
 
-> ℹ️ Este proyecto usa los puertos 8042 y 15442: si alguno ya está ocupado
+### El menú de la interfaz gráfica
+
+**Seis entradas, una por tabla sin clave foránea** — que es exactamente lo que la v1 construye:
+
+| Dirección | En el menú |
+|---|---|
+| `/productos` | Productos |
+| `/empresas` | Empresas |
+| `/personas` | Personas |
+| `/roles` | Roles |
+| `/rutas` | Rutas |
+| `/usuarios` | Usuarios |
+
+> **El menú nombra RECURSOS del dominio, no tablas ni rutas de la API.**
+> Dice «Productos», no `/api/producto`.
+
+Pruebe la joya didáctica de la v1 —en Swagger o en la propia interfaz—: un PUT
+con solo `{"stock": 99}` responde **422**; el mismo cuerpo en PATCH responde
+**200**. Esa diferencia es parte de lo que enseña la versión.
+
+> ℹ️ Este proyecto usa los puertos **8041** (interfaz gráfica), **8042**
+> (API) y **15442** (PostgreSQL): si alguno ya está ocupado
 > en su máquina, cámbielo en `docker-compose.yml` (el lado izquierdo del
 > `"puerto:puerto"`).
 >

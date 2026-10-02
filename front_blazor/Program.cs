@@ -18,6 +18,31 @@ builder.Services.AddRazorComponents()
 // ============================================================
 var urlApi = builder.Configuration["UrlApi"] ?? "http://localhost:8042";
 
+// ============================================================
+// QUÉ VERSIÓN ES ESTA, Y QUÉ INTERFACES TIENE
+//
+// Es el ÚNICO sitio donde esto se escribe. El menú y el pie de página son el
+// MISMO ARCHIVO en las cuatro versiones: leen de aquí.
+//
+// Antes el número de versión y las entradas estaban a mano en el layout, y ya
+// había fallado — el Inicio decía «Versión 1 del proyecto» en los cuatro
+// proyectos, porque era un texto en un archivo que nadie volvía a mirar.
+// ============================================================
+builder.Services.AddSingleton(new MenuApp
+{
+    Version = 1,
+    Entradas =
+    [
+        new() { Ruta = "productos", Texto = "Productos", Permiso = "interfaz.productos" },
+        new() { Ruta = "empresas", Texto = "Empresas", Permiso = "interfaz.empresas" },
+        new() { Ruta = "personas", Texto = "Personas", Permiso = "interfaz.personas" },
+        new() { Ruta = "roles", Texto = "Roles", Permiso = "interfaz.roles" },
+        new() { Ruta = "rutas", Texto = "Rutas", Permiso = "interfaz.rutas" },
+        new() { Ruta = "usuarios", Texto = "Usuarios", Permiso = "interfaz.usuarios" },
+    ],
+});
+
+
 builder.Services.AddHttpClient<ServicioProducto>(cliente =>
 {
     cliente.BaseAddress = new Uri(urlApi);
